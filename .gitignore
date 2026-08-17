@@ -1,0 +1,21 @@
+Python Cache
+
+pycache/
+*.py[cod]
+
+Logs
+
+orchestrator_log.txt
+*.log
+
+Google Drive Shortcuts (ข้ามไฟล์พวกนี้ ไม่ต้องเซฟเข้า Git)
+
+*.gsheet
+*.gdoc
+*.gslides
+
+(Optional) ถ้าไม่อยากเก็บไฟล์ผลลัพธ์ของ Agent ให้เอา # ข้างล่างออก
+
+payloads/is*.json
+
+payloads/is*.txt

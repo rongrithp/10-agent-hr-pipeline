@@ -1,0 +1,32 @@
+[
+  {
+    "applicant_id": "APP-001",
+    "name": "สมชาย โค้ดดิ้ง",
+    "education": "ปริญญาตรี วิทยาการคอมพิวเตอร์",
+    "experience_years": 4,
+    "skills": ["Python", "Pandas", "SQL", "Data Analysis"],
+    "current_salary": 45000,
+    "expected_salary": 55000,
+    "highlight": "เคยเป็นติวเตอร์สอนเขียนโปรแกรมให้รุ่นน้องที่มหาลัย 2 ปี อธิบายเรื่องยากให้เข้าใจง่ายได้ดี"
+  },
+  {
+    "contact_id": "APP-002",
+    "name": "สมหญิง ดีไซน์",
+    "education": "ปริญญาตรี นิเทศศาสตร์",
+    "experience_years": 2,
+    "skills": ["Photoshop", "Illustrator", "Figma", "UX/UI"],
+    "current_salary": 30000,
+    "expected_salary": 35000,
+    "highlight": "ทำงานสายกราฟิกมา 2 ปี อยากเปลี่ยนสายงาน สนใจเรียนรู้ Python"
+  },
+  {
+    "user_id": "APP-003",
+    "name": "John Doe",
+    "education": "Master's Degree in Data Science",
+    "experience_years": 6,
+    "skills": ["Python", "Machine Learning", "R", "Tableau"],
+    "current_salary": 80000,
+    "expected_salary": 95000,
+    "highlight": "มีประสบการณ์สอน Data Science ให้คนวัยทำงาน 3 ปี"
+  }
+]
