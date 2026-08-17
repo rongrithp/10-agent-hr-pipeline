@@ -1,0 +1,68 @@
+{
+  "employee_name": "สมชาย โค้ดดิ้ง",
+  "job_title": "Senior Python Developer",
+  "start_date": "2024-07-22",
+  "it_setup_checklist": {
+    "email_created": "somchai.k@company.com",
+    "hardware_assigned": [
+      "Laptop (High-performance)",
+      "External Monitor (x2)",
+      "Keyboard",
+      "Mouse",
+      "Headset"
+    ],
+    "software_access": [
+      "Google Workspace (Email, Drive, Calendar)",
+      "Slack/Microsoft Teams",
+      "GitHub/GitLab",
+      "Jira/Confluence",
+      "PyCharm Professional / VS Code",
+      "Docker Desktop",
+      "AWS/GCP/Azure Console Access (Developer Role)",
+      "VPN Access"
+    ]
+  },
+  "day_one_agenda": [
+    {
+      "time": "09:00 - 09:30",
+      "activity": "ลงทะเบียนและรับเอกสาร",
+      "person_in_charge": "HR Department"
+    },
+    {
+      "time": "09:30 - 10:30",
+      "activity": "ปฐมนิเทศพนักงานใหม่และแนะนำบริษัท",
+      "person_in_charge": "HR Manager"
+    },
+    {
+      "time": "10:30 - 11:30",
+      "activity": "รับอุปกรณ์ IT และตั้งค่าเบื้องต้น",
+      "person_in_charge": "IT Support"
+    },
+    {
+      "time": "11:30 - 12:00",
+      "activity": "พบปะผู้จัดการโดยตรงและทีม",
+      "person_in_charge": "Team Lead/Manager"
+    },
+    {
+      "time": "12:00 - 13:00",
+      "activity": "พักทานอาหารกลางวันกับทีม",
+      "person_in_charge": "Team Lead/Manager"
+    },
+    {
+      "time": "13:00 - 14:30",
+      "activity": "แนะนำโปรเจกต์ปัจจุบันและระบบงาน",
+      "person_in_charge": "Team Lead/Senior Developer"
+    },
+    {
+      "time": "14:30 - 16:00",
+      "activity": "ตั้งค่าสภาพแวดล้อมการทำงานและเครื่องมือ",
+      "person_in_charge": "IT Support/Team Lead"
+    },
+    {
+      "time": "16:00 - 17:00",
+      "activity": "Q&A และสรุปวันแรก",
+      "person_in_charge": "Team Lead/Manager"
+    }
+  ],
+  "welcome_email_draft": "Subject: ยินดีต้อนรับคุณสมชาย โค้ดดิ้ง - Senior Python Developer คนใหม่ของเรา!\n\nเรียนเพื่อนร่วมงานทุกท่าน,\n\nเรามีความยินดีเป็นอย่างยิ่งที่จะแนะนำสมาชิกใหม่ล่าสุดของทีมเรา คุณสมชาย โค้ดดิ้ง ซึ่งจะเข้าร่วมกับเราในตำแหน่ง Senior Python Developer โดยเริ่มตั้งแต่วันจันทร์ที่ 22 กรกฎาคม 2567 นี้\n\nคุณสมชายจะนำประสบการณ์และความเชี่ยวชาญด้าน Python Development มาช่วยเสริมความแข็งแกร่งให้กับทีม Technology Department ของเรา โดยเฉพาะอย่างยิ่งในการพัฒนาและดูแลรักษาระบบงานที่ใช้ Python รวมถึงการออกแบบและสร้าง AI Agents และระบบ Automation ต่างๆ\n\nเราเชื่อมั่นว่าคุณสมชายจะนำคุณค่าและมุมมองใหม่ๆ มาสู่บริษัทของเรา และช่วยผลักดันให้โปรเจกต์ต่างๆ ประสบความสำเร็จมากยิ่งขึ้น\n\nขอให้ทุกท่านช่วยกันต้อนรับคุณสมชายเข้าสู่ครอบครัวของเราอย่างอบอุ่นนะครับ/คะ\n\nขอแสดงความนับถือ,\n[ชื่อผู้จัดการ/หัวหน้าฝ่าย HR]\n[ตำแหน่ง]\nบริษัท [ชื่อบริษัท]"
+}

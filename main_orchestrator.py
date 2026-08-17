@@ -5,12 +5,12 @@ import sys
 from datetime import datetime
 
 # บังคับ Terminal ให้อ่านภาษาไทย/อีโมจิได้
-sys.stdout.reconfigure(encoding='utf-8')
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
 # ⚙️ Configuration & Pipeline
 # ==========================================
-# STREAMING_CHUNK: Defining Pipeline Stages
 PIPELINE_STAGES = [
     {
         "module": "agent_1_requirement_analyzer.py",
@@ -67,13 +67,11 @@ PIPELINE_STAGES = [
 PAYLOAD_DIR = "payloads"
 LOG_FILE = "orchestrator_log.txt"
 
-# STREAMING_CHUNK: Setup Environment Function
 def setup_environment():
     if not os.path.exists(PAYLOAD_DIR):
         os.makedirs(PAYLOAD_DIR)
         log_event("SYSTEM", f"Created directory: {PAYLOAD_DIR}")
 
-# STREAMING_CHUNK: Logging Function
 def log_event(agent_name, message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] [{agent_name}] {message}"
@@ -81,7 +79,6 @@ def log_event(agent_name, message):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(log_entry + "\n")
 
-# STREAMING_CHUNK: Run Agent Function
 def run_agent(module_name, input_file, output_file):
     log_event("ORCHESTRATOR", f"Triggering {module_name}...")
     
@@ -100,25 +97,23 @@ def run_agent(module_name, input_file, output_file):
         log_event(module_name, "EXECUTION SUCCESS")
         return True
     except subprocess.CalledProcessError as e:
-        log_event(module_name, f"CRITICAL ERROR: {e.stderr}")
+        # [Low-Level Actuator] ดัก Error ทั้งท่อน้ำดีและน้ำเสีย
+        error_msg = e.stderr.strip() if e.stderr else (e.stdout.strip() if e.stdout else "Unknown Error")
+        log_event(module_name, f"CRITICAL ERROR: {error_msg}")
         return False
 
-# STREAMING_CHUNK: Main Pipeline Logic
 def run_pipeline():
     log_event("SYSTEM", "Starting 24/7 HR Agentic Pipeline Monitor...")
     
     while True:
-        # Check if the initial input file exists
         if os.path.exists(PIPELINE_STAGES[0]["input_file"]):
             log_event("SYSTEM", "New Hiring Request detected. Initiating Pipeline.")
             
             pipeline_broken = False
             for stage in PIPELINE_STAGES:
-                # 1. Check if input file exists
                 if not os.path.exists(stage["input_file"]):
-                    break # Stop and wait for the previous stage to finish
+                    break 
                 
-                # 2. If input exists, but output doesn't, run the agent
                 if not os.path.exists(stage["output_file"]):
                     success = run_agent(stage["module"], stage["input_file"], stage["output_file"])
                     if not success:
@@ -126,14 +121,12 @@ def run_pipeline():
                         pipeline_broken = True
                         break 
             
-            # If all stages completed successfully, rename the input file to prevent re-running
             if not pipeline_broken and os.path.exists(PIPELINE_STAGES[-1]["output_file"]):
                 log_event("SYSTEM", "🎉 HR PIPELINE COMPLETED SUCCESSFULLY! 🎉")
                 os.rename(PIPELINE_STAGES[0]["input_file"], f"{PAYLOAD_DIR}/is0_processed_{int(time.time())}.txt")
                 
         time.sleep(5) 
 
-# STREAMING_CHUNK: Main Execution Block
 if __name__ == "__main__":
     setup_environment()
     try:

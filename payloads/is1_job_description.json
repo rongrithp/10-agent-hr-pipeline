@@ -1,0 +1,25 @@
+{
+  "job_title": "Senior Python Developer",
+  "department": "Technology Department",
+  "key_responsibilities": [
+    "พัฒนาและดูแลรักษาระบบงานที่ใช้ Python เป็นหลัก",
+    "ออกแบบและสร้าง AI Agents เพื่อเพิ่มประสิทธิภาพการทำงาน",
+    "พัฒนาระบบ Automation เพื่อลดขั้นตอนการทำงานซ้ำซ้อน",
+    "ร่วมมือกับทีมงานในการวิเคราะห์ความต้องการและนำเสนอโซลูชันทางเทคนิค",
+    "ตรวจสอบและปรับปรุงคุณภาพโค้ด รวมถึงประสิทธิภาพของระบบ"
+  ],
+  "must_have_skills": [
+    "ประสบการณ์เชี่ยวชาญในการพัฒนาด้วยภาษา Python",
+    "ประสบการณ์ในการพัฒนาและปรับใช้ AI Agents",
+    "ประสบการณ์ในการออกแบบและสร้างระบบ Automation",
+    "ความเข้าใจในหลักการพัฒนาซอฟต์แวร์ที่ดี (Software Development Best Practices)",
+    "ทักษะการแก้ปัญหาและการวิเคราะห์ที่ดีเยี่ยม"
+  ],
+  "nice_to_have_skills": [
+    "ประสบการณ์การทำงานกับ Cloud Platforms (เช่น AWS, GCP, Azure)",
+    "ความรู้เกี่ยวกับ Machine Learning Frameworks (เช่น TensorFlow, PyTorch)",
+    "ความเข้าใจใน CI/CD pipelines",
+    "ประสบการณ์กับ Docker/Kubernetes"
+  ],
+  "suggested_salary_range": "80,000 - 120,000 บาท"
+}

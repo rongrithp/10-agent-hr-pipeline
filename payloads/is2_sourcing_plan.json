@@ -1,0 +1,24 @@
+{
+  "target_candidate_profile": "ผู้สมัครในอุดมคติคือ Senior Python Developer ที่มีประสบการณ์อย่างน้อย 5 ปีขึ้นไป มีความเชี่ยวชาญในการพัฒนาและดูแลรักษาระบบด้วย Python เป็นหลัก สามารถออกแบบและสร้าง AI Agents รวมถึงระบบ Automation ได้อย่างมีประสิทธิภาพ มีความเข้าใจอย่างลึกซึ้งในหลักการพัฒนาซอฟต์แวร์ที่ดี (Software Development Best Practices) และมีทักษะการแก้ปัญหาและการวิเคราะห์ที่ยอดเยี่ยม หากมีประสบการณ์กับ Cloud Platforms (AWS, GCP, Azure), Machine Learning Frameworks (TensorFlow, PyTorch), CI/CD หรือ Docker/Kubernetes จะได้รับการพิจารณาเป็นพิเศษ",
+  "recommended_platforms": [
+    "LinkedIn",
+    "JobsDB",
+    "Jobthai",
+    "Stack Overflow Jobs",
+    "Facebook Groups (เช่น Python Developers Thailand, AI/ML Thailand)",
+    "ThaiDev.com"
+  ],
+  "search_keywords": [
+    "Senior Python Developer",
+    "Python Engineer Senior",
+    "AI Agent Developer",
+    "Automation Engineer Python",
+    "Python AND (AI OR \"Artificial Intelligence\")",
+    "Python AND (Automation OR RPA)",
+    "Python AND (TensorFlow OR PyTorch OR \"Machine Learning\")",
+    "Python AND (AWS OR GCP OR Azure OR Cloud)",
+    "Python AND (Docker OR Kubernetes OR CI/CD)",
+    "Python AND \"System Design\" AND \"Best Practices\""
+  ],
+  "salary_analysis": "ช่วงเงินเดือน 80,000 - 120,000 บาท สำหรับตำแหน่ง Senior Python Developer ที่มีทักษะเฉพาะทางด้าน AI Agents และ Automation ถือว่าอยู่ในระดับที่แข่งขันได้และน่าดึงดูดในตลาดปัจจุบันสำหรับผู้มีประสบการณ์ 5 ปีขึ้นไป โดยเฉพาะอย่างยิ่งหากผู้สมัครมีประสบการณ์ในทักษะเสริม (Nice-to-have skills) เช่น Cloud, ML Frameworks หรือ DevOps ก็จะยิ่งทำให้ช่วงเงินเดือนนี้มีความเหมาะสมและสามารถดึงดูดผู้สมัครที่มีคุณภาพสูงได้"
+}

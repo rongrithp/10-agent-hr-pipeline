@@ -1,13 +1,25 @@
 import os
 import sys
 import json
-from typing import List
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
 
-MY_GEMINI_API_KEY = "AIzaSyDpFinTIgVB0g44Acu9TRjqEp6Nn-Wk1Ak"
+# [Low-Level Actuator] บังคับท่อส่งข้อมูลให้เป็น UTF-8
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
+# โหลดข้อมูลอ้างอิงจากไฟล์ .env
+load_dotenv() 
+
+MY_GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not MY_GEMINI_API_KEY:
+    print("CRITICAL ERROR: GEMINI_API_KEY not found! Please check your .env file.")
+    sys.exit(1)
+    
+    
 # ==========================================
 # Schema IS9 (Output)
 # ==========================================
