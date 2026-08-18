@@ -101,6 +101,29 @@ def run_agent(module_name, input_file, output_file):
         error_msg = e.stderr.strip() if e.stderr else (e.stdout.strip() if e.stdout else "Unknown Error")
         log_event(module_name, f"CRITICAL ERROR: {error_msg}")
         return False
+    
+# ==========================================
+# 🚀 PHASE 11: PHYSICAL ACTUATION (DATABASE SYNC)
+# ==========================================
+print("\n" + "="*50)
+print("🤖 [Orchestrator] Triggering Agent 11: Database Sync")
+print("="*50)
+
+try:
+    import subprocess
+    result_11 = subprocess.run(
+        ["python", "agent_11_database_sync.py"], 
+        capture_output=True, 
+        text=True, 
+        check=True
+    )
+    print(result_11.stdout)
+    print("🏆 [Orchestrator] END-TO-END PIPELINE COMPLETE: Dynamic Balance 100% Achieved!")
+    
+except subprocess.CalledProcessError as e:
+    print("❌ [Orchestrator] CRITICAL ERROR IN ACTUATOR (Agent 11)")
+    print(e.stderr)
+    sys.exit(1)
 
 def run_pipeline():
     log_event("SYSTEM", "Starting 24/7 HR Agentic Pipeline Monitor...")
@@ -133,3 +156,4 @@ if __name__ == "__main__":
         run_pipeline()
     except KeyboardInterrupt:
         log_event("SYSTEM", "Orchestrator terminated by user.")
+        

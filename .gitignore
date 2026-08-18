@@ -10,7 +10,11 @@ orchestrator_log.txt
 *.gsheet
 *.gdoc
 *.gslides
+*.env
 
 # (Optional) ถ้าไม่อยากเก็บไฟล์ผลลัพธ์ของ Agent ให้เอา # ข้างล่างออก
 # payloads/*.json
 # payloads/*.txt
+
+# GCP Service Account Credentials
+gcp_credentials.json
