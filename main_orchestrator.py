@@ -125,6 +125,31 @@ except subprocess.CalledProcessError as e:
     print(e.stderr)
     sys.exit(1)
 
+
+# ==========================================
+# 🚀 PHASE 12: PHYSICAL ACTUATION (MOBILE NOTIFY)
+# ==========================================
+print("\n" + "="*50)
+print("🤖 [Orchestrator] Triggering Agent 12: Telegram Notify")
+print("="*50)
+
+try:
+    result_12 = subprocess.run(
+        ["python", "agent_12_telegram_notify.py"], 
+        capture_output=True, 
+        text=True, 
+        check=True
+    )
+    print(result_12.stdout)
+    print("🏆 [Orchestrator] ALL SYSTEMS NOMINAL: Full Pipeline Executed Successfully!")
+    
+except subprocess.CalledProcessError as e:
+    print("❌ [Orchestrator] CRITICAL ERROR IN ACTUATOR (Agent 12)")
+    print(e.stderr)
+    sys.exit(1)
+
+
+
 def run_pipeline():
     log_event("SYSTEM", "Starting 24/7 HR Agentic Pipeline Monitor...")
     
