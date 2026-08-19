@@ -65,7 +65,14 @@ def sync_job_tracker(data):
         placed_candidate = data.get("placed_candidate", "")
         fee_amount = data.get("fee_amount", "")
         payment_status = data.get("payment_status", "Pending")
-        workspace_path = data.get("workspace_path", f"workspaces/{job_id}/")
+        
+        # อ้างอิง Workspace Path ผ่าน config.get_workspace เสมอ
+        workspace_path = data.get("workspace_path")
+        if not workspace_path and job_id:
+            workspace_path = config.get_workspace(job_id)["root"]
+        elif not workspace_path:
+            workspace_path = ""
+            
         remarks = data.get("remarks", "")
 
         row_data = [
@@ -109,6 +116,10 @@ def main():
     sync_job_tracker(job_data)
         
     agent1_input_path = os.path.join(paths["specs"], 'is1_input_spec.txt')
+    
+    # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+    config.ensure_parent_dir(agent1_input_path)
+    
     with open(agent1_input_path, 'w', encoding='utf-8') as f:
         f.write(
             f"Job ID: {job_data.get('job_id')}\n"
@@ -123,7 +134,7 @@ def main():
         
     print("🚀 [Orchestrator] เตรียมส่งไม้ผลัดปลุก Agent 1...")
     
-    # [NEW ARCHITECTURE] เตะปลุกด้วย Absolute Path
+    # เตะปลุกด้วย Absolute Path
     next_agent = os.path.join(config.ENGINE_DIR, "agent_1_job_description.py")
     subprocess.Popen([sys.executable, next_agent, job_id])
 

@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -94,12 +92,15 @@ if __name__ == "__main__":
         agent = GeminiComplianceChecker(api_key=MY_GEMINI_API_KEY)
         is7_result = agent.verify_documents(is6_data, docs_data)
 
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is7_result.model_dump_json(indent=2))
 
         print(f"✅ [Agent 7] ตรวจเอกสารเสร็จสิ้น เซฟลงโฟลเดอร์ 03_evaluations")
         
-        # [FIXED] ชี้เป้าให้ตรงกับชื่อไฟล์จริง agent_8_offer_negotiator.py
+        # ชี้เป้าให้ตรงกับชื่อไฟล์จริง agent_8_offer_negotiator.py
         print(f"🚀 [Agent 7] เตรียมเตะปลุก Agent 8 ร่างข้อเสนอจ้างงาน...")
         next_agent = os.path.join(config.ENGINE_DIR, "agent_8_offer_negotiator.py")
         subprocess.Popen([sys.executable, next_agent, job_id])

@@ -49,7 +49,7 @@ def sync_to_database():
     job_id = sys.argv[1].strip()
     paths = config.get_workspace(job_id)
     
-    # พิกัดไฟล์ข้อมูลใน Workspace
+    # พิกัดไฟล์ข้อมูลใน Workspace อ้างอิงผ่าน config.get_workspace เสมอ
     is10_path = os.path.join(paths["onboarding"], "is10_output_employee_profile.json")
     is9_path = os.path.join(paths["onboarding"], "is9_output_onboarding_plan.json")
     is8_path = os.path.join(paths["offers"], "is8_output_offer_details.json")
@@ -134,7 +134,7 @@ def sync_to_database():
         if isinstance(compliance_status, list):
             compliance_status = "PASS"
             
-        vault_path = f"05_onboarding_vault/{candidate_id}"
+        vault_path = os.path.join(paths["onboarding"], candidate_id)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # 3. จัดเรียงข้อมูลใน Row (A ถึง N)

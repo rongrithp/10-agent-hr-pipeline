@@ -6,8 +6,6 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -87,12 +85,15 @@ if __name__ == "__main__":
         agent = GeminiInterviewScheduler(api_key=MY_GEMINI_API_KEY)
         is5_result = agent.schedule_interviews(is4_data)
 
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is5_result.model_dump_json(indent=2))
 
         print(f"✅ [Agent 5] ร่างอีเมลและคำถามเสร็จสิ้น เซฟลงโฟลเดอร์ 03_evaluations")
         
-        # ⚠️ ไม่ต้องเตะปลุก Agent 6 เพราะต้องรอให้การสัมภาษณ์เกิดขึ้นจริงก่อน (รอคนสัมภาษณ์จด Note)
+        # ⚠️ ไม่ต้องเตะปลุก Agent 6 เพราะต้องรอให้การสัมภาษณ์เกิดขึ้นจริงก่อน
         print(f"⏸️ [System] หยุดรอ... รอผู้สัมภาษณ์ป้อน Notes ใน 02_sourcing_dropzone เพื่อปลุก Agent 6 ในรอบถัดไป")
     except Exception as e:
         print(f"❌ [Agent 5] Error: {e}")

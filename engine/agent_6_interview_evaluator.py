@@ -1,14 +1,12 @@
 import os
 import sys
 import json
-import subprocess # 👈 เติมบรรทัดนี้กลับเข้าไปเพื่อเปิดใช้งานการเตะปลุกโดมิโน่
+import subprocess
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -99,6 +97,9 @@ if __name__ == "__main__":
         print(f"⚡ [Agent 6] เข้าสู่ Workspace: {job_id} กำลังประเมินผลสัมภาษณ์...")
         agent = GeminiInterviewEvaluator(api_key=MY_GEMINI_API_KEY)
         is6_result = agent.evaluate(is1_data, notes_data)
+
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is6_result.model_dump_json(indent=2))

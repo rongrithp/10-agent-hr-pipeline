@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -92,6 +90,9 @@ if __name__ == "__main__":
         print(f"⚡ [Agent 8] เข้าสู่ Workspace: {job_id} กำลังคำนวณตัวเลขและร่าง Offer...")
         agent = GeminiOfferNegotiator(api_key=MY_GEMINI_API_KEY)
         is8_result = agent.negotiate_offer(is7_data, is1_data, cv_data)
+
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is8_result.model_dump_json(indent=2))

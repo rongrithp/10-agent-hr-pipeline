@@ -3,8 +3,6 @@ import sys
 import json
 import requests
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)

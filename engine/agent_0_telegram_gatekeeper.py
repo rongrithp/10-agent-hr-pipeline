@@ -121,7 +121,14 @@ def sync_job_tracker(data):
         placed_candidate = data.get("placed_candidate", "")
         fee_amount = data.get("fee_amount", "")
         payment_status = data.get("payment_status", "Pending")
-        workspace_path = data.get("workspace_path", f"workspaces/{job_id}/")
+        
+        # ดึง Workspace Path ผ่าน config.get_workspace เสมอ
+        workspace_path = data.get("workspace_path")
+        if not workspace_path and job_id:
+            workspace_path = config.get_workspace(job_id)["root"]
+        elif not workspace_path:
+            workspace_path = ""
+            
         remarks = data.get("remarks", "")
 
         row_data = [
@@ -169,6 +176,9 @@ def handle_query(call):
             # [NEW ARCHITECTURE] ขอพิกัด Workspace จาก config และเอาไฟล์ไปวางใน specs
             paths = config.get_workspace(job_id)
             target_path = os.path.join(paths["specs"], "is0_job_ticket.json")
+            
+            # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+            config.ensure_parent_dir(target_path)
             
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
@@ -226,7 +236,7 @@ def handle_message(message):
                 data["current_stage"] = "OPEN"
                 data["open_date"] = today
                 data["date"] = today
-                data["workspace_path"] = f"workspaces/{job_id}/"
+                data["workspace_path"] = config.get_workspace(job_id)["root"]
                 
                 pending_jobs[chat_id] = data
                 

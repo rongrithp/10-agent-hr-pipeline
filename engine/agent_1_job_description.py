@@ -3,8 +3,6 @@ import sys
 import subprocess
 import google.generativeai as genai
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -56,6 +54,9 @@ def main():
     
     try:
         response = model.generate_content(prompt)
+        
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(OUTPUT_FILE)
         
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             f.write(response.text)

@@ -6,8 +6,6 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -75,6 +73,9 @@ if __name__ == "__main__":
         print(f"⚡ [Agent 2] เข้าสู่ Workspace: {job_id} กำลังวางกลยุทธ์สรรหา...")
         agent = GeminiSourcingStrategist(api_key=MY_GEMINI_API_KEY)
         is2_result = agent.strategize(is1_data)
+
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is2_result.model_dump_json(indent=2))

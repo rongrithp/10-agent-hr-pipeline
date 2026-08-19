@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -106,12 +104,15 @@ if __name__ == "__main__":
         agent = GeminiTalentProfiler(api_key=MY_GEMINI_API_KEY)
         is10_result = agent.create_profile(is9_data, cv_data, notes_data)
 
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is10_result.model_dump_json(indent=2))
 
         print(f"✅ [Agent 10] สร้างโปรไฟล์พนักงานเสร็จสิ้น คายประจุลงโฟลเดอร์ 05_onboarding_vault")
         
-        # 🚀 [NEW] สับสวิตช์เตะปลุก Agent 11 เพื่อซิงค์ลง Google Sheets ต่อเนื่องทันที
+        # [NEW] สับสวิตช์เตะปลุก Agent 11 เพื่อซิงค์ลง Google Sheets ต่อเนื่องทันที
         print(f"🚀 [Agent 10] เตรียมเตะปลุก Agent 11 ซิงค์ฐานข้อมูล Google Sheets...")
         next_agent = os.path.join(config.ENGINE_DIR, "agent_11_database_sync.py")
         subprocess.Popen([sys.executable, next_agent, job_id])

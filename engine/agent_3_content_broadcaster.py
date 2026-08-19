@@ -6,8 +6,6 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import sys
-import os
 from pathlib import Path
 
 root_dir = str(Path(__file__).resolve().parent.parent)
@@ -79,13 +77,14 @@ if __name__ == "__main__":
         agent = GeminiContentBroadcaster(api_key=MY_GEMINI_API_KEY)
         is3_result = agent.broadcast(is2_data)
 
+        # Safety Guard: สร้าง parent directory รองรับเสมอก่อนบันทึกไฟล์
+        config.ensure_parent_dir(output_file)
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(is3_result.model_dump_json(indent=2))
 
         print(f"✅ [Agent 3] ร่างประกาศเสร็จสิ้น เซฟลงโฟลเดอร์ specs")
         print(f"⏸️ [System] Phase 1 เสร็จสมบูรณ์! ระบบเข้าสู่โหมดรอรับเรซูเม่ (Transient Hypofrontality) สำหรับ {job_id}")
-        
-        # ⚠️ ไม่เตะปลุก Agent 4 รอให้ Actuator ข้างนอกเอา CV มาหย่อนแล้วค่อยสั่งรัน
         
     except Exception as e:
         print(f"❌ [Agent 3] Error: {e}")
