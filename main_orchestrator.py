@@ -1,184 +1,131 @@
 import os
-import time
-import subprocess
 import sys
+import json
+import subprocess
+import gspread
+from google.oauth2.service_account import Credentials
 from datetime import datetime
+from pathlib import Path
 
-# บังคับ Terminal ให้อ่านภาษาไทย/อีโมจิได้
+root_dir = str(Path(__file__).resolve().parent)
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
+import config 
+
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
-# ==========================================
-# ⚙️ Configuration & Pipeline
-# ==========================================
-PIPELINE_STAGES = [
-    {
-        "module": "agent_1_requirement_analyzer.py",
-        "input_file": "payloads/is0_hiring_request.txt",      
-        "output_file": "payloads/is1_job_description.json"
-    },
-    {
-        "module": "agent_2_sourcing_strategist.py",
-        "input_file": "payloads/is1_job_description.json",    
-        "output_file": "payloads/is2_sourcing_plan.json"
-    },
-    {
-        "module": "agent_3_content_broadcaster.py",
-        "input_file": "payloads/is2_sourcing_plan.json",
-        "output_file": "payloads/is3_job_postings.json"
-    },
-    {
-        "module": "agent_4_resume_screener.py",
-        "input_file": "payloads/is3_job_postings.json",
-        "output_file": "payloads/is4_shortlisted_candidates.json"
-    },
-    {
-        "module": "agent_5_interview_scheduler.py",
-        "input_file": "payloads/is4_shortlisted_candidates.json",
-        "output_file": "payloads/is5_interview_prep.json"
-    },
-    {
-        "module": "agent_6_interview_evaluator.py",
-        "input_file": "payloads/is5_interview_prep.json",
-        "output_file": "payloads/is6_evaluation_result.json"
-    },
-    {
-        "module": "agent_7_compliance_checker.py",
-        "input_file": "payloads/is6_evaluation_result.json",
-        "output_file": "payloads/is7_verification_status.json"
-    },
-    {
-        "module": "agent_8_offer_negotiator.py",
-        "input_file": "payloads/is7_verification_status.json",
-        "output_file": "payloads/is8_offer_letter.json"
-    },
-    {
-        "module": "agent_9_onboarding_planner.py",
-        "input_file": "payloads/is8_offer_letter.json",
-        "output_file": "payloads/is9_onboarding_plan.json"
-    },
-    {
-        "module": "agent_10_talent_profiler.py",
-        "input_file": "payloads/is9_onboarding_plan.json",
-        "output_file": "payloads/is10_employee_profile.json"
-    }
-]
+SPREADSHEET_ID = '13f5p_vrtjihGeWms1UvE9oJcvnlUl3Ous4-kSeifsrw'
+CREDENTIALS_FILE = str(config.GCP_CREDENTIALS_PATH)
+TARGET_SHEET_NAME = 'Job_Tracker'
 
-PAYLOAD_DIR = "payloads"
-LOG_FILE = "orchestrator_log.txt"
-
-def setup_environment():
-    if not os.path.exists(PAYLOAD_DIR):
-        os.makedirs(PAYLOAD_DIR)
-        log_event("SYSTEM", f"Created directory: {PAYLOAD_DIR}")
-
-def log_event(agent_name, message):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] [{agent_name}] {message}"
-    print(log_entry)
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(log_entry + "\n")
-
-def run_agent(module_name, input_file, output_file):
-    log_event("ORCHESTRATOR", f"Triggering {module_name}...")
-    
-    cmd = ["python", module_name, input_file, output_file]
+def sync_job_tracker(data):
+    """บันทึกหรืออัปเดตใบงานลงในแท็บ Job_Tracker ตามลำดับคอลัมน์ A ถึง N"""
+    if not os.path.exists(CREDENTIALS_FILE):
+        print(f"⚠️ [Orchestrator] ไม่พบไฟล์กุญแจ GCP Credentials: {CREDENTIALS_FILE}")
+        return
 
     try:
-        result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
-            check=True,
-            encoding='utf-8'
-        )
-        if result.stdout:
-            print(result.stdout.strip())
-        log_event(module_name, "EXECUTION SUCCESS")
-        return True
-    except subprocess.CalledProcessError as e:
-        # [Low-Level Actuator] ดัก Error ทั้งท่อน้ำดีและน้ำเสีย
-        error_msg = e.stderr.strip() if e.stderr else (e.stdout.strip() if e.stdout else "Unknown Error")
-        log_event(module_name, f"CRITICAL ERROR: {error_msg}")
-        return False
-    
-# ==========================================
-# 🚀 PHASE 11: PHYSICAL ACTUATION (DATABASE SYNC)
-# ==========================================
-print("\n" + "="*50)
-print("🤖 [Orchestrator] Triggering Agent 11: Database Sync")
-print("="*50)
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
+        credentials = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scopes)
+        client = gspread.authorize(credentials)
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
 
-try:
-    import subprocess
-    result_11 = subprocess.run(
-        ["python", "agent_11_database_sync.py"], 
-        capture_output=True, 
-        text=True, 
-        check=True
-    )
-    print(result_11.stdout)
-    print("🏆 [Orchestrator] END-TO-END PIPELINE COMPLETE: Dynamic Balance 100% Achieved!")
-    
-except subprocess.CalledProcessError as e:
-    print("❌ [Orchestrator] CRITICAL ERROR IN ACTUATOR (Agent 11)")
-    print(e.stderr)
-    sys.exit(1)
+        try:
+            sheet = spreadsheet.worksheet(TARGET_SHEET_NAME)
+        except gspread.exceptions.WorksheetNotFound:
+            print(f"⚠️ [Orchestrator] ไม่พบชีท '{TARGET_SHEET_NAME}' กำลังสร้างชีทใหม่ให้อัตโนมัติ...")
+            sheet = spreadsheet.add_worksheet(title=TARGET_SHEET_NAME, rows="100", cols="20")
 
+        headers = [
+            "Job_ID", "Open_Date", "Client_Name", "Contact_Info", "Position",
+            "Headcount", "Salary_Budget", "Target_Start_Date", "Current_Stage",
+            "Placed_Candidate", "Fee_Amount", "Payment_Status", "Workspace_Path", "Remarks"
+        ]
 
-# ==========================================
-# 🚀 PHASE 12: PHYSICAL ACTUATION (MOBILE NOTIFY)
-# ==========================================
-print("\n" + "="*50)
-print("🤖 [Orchestrator] Triggering Agent 12: Telegram Notify")
-print("="*50)
+        existing_data = sheet.get_all_values()
+        if len(existing_data) == 0:
+            sheet.append_row(headers)
+        elif existing_data[0] != headers:
+            sheet.update('A1:N1', [headers])
 
-try:
-    result_12 = subprocess.run(
-        ["python", "agent_12_telegram_notify.py"], 
-        capture_output=True, 
-        text=True, 
-        check=True
-    )
-    print(result_12.stdout)
-    print("🏆 [Orchestrator] ALL SYSTEMS NOMINAL: Full Pipeline Executed Successfully!")
-    
-except subprocess.CalledProcessError as e:
-    print("❌ [Orchestrator] CRITICAL ERROR IN ACTUATOR (Agent 12)")
-    print(e.stderr)
-    sys.exit(1)
+        job_id = data.get("job_id", "")
+        open_date = data.get("open_date", data.get("date", datetime.now().strftime("%Y-%m-%d")))
+        client_name = data.get("client", data.get("client_name", ""))
+        contact_info = data.get("contact_info", data.get("requester", ""))
+        position = data.get("position", "")
+        headcount = data.get("headcount", 1)
+        salary_budget = data.get("budget", data.get("salary_budget", ""))
+        target_start_date = data.get("target_start_date", data.get("timeline", ""))
+        current_stage = data.get("current_stage", data.get("status", "OPEN"))
+        placed_candidate = data.get("placed_candidate", "")
+        fee_amount = data.get("fee_amount", "")
+        payment_status = data.get("payment_status", "Pending")
+        workspace_path = data.get("workspace_path", f"workspaces/{job_id}/")
+        remarks = data.get("remarks", "")
 
+        row_data = [
+            job_id, open_date, client_name, contact_info, position,
+            headcount, salary_budget, target_start_date, current_stage,
+            placed_candidate, fee_amount, payment_status, workspace_path, remarks
+        ]
 
+        found_row_idx = None
+        if len(existing_data) > 1:
+            for idx, row in enumerate(existing_data[1:], start=2):
+                if len(row) > 0 and row[0].strip() == job_id.strip():
+                    found_row_idx = idx
+                    break
 
-def run_pipeline():
-    log_event("SYSTEM", "Starting 24/7 HR Agentic Pipeline Monitor...")
-    
-    while True:
-        if os.path.exists(PIPELINE_STAGES[0]["input_file"]):
-            log_event("SYSTEM", "New Hiring Request detected. Initiating Pipeline.")
-            
-            pipeline_broken = False
-            for stage in PIPELINE_STAGES:
-                if not os.path.exists(stage["input_file"]):
-                    break 
-                
-                if not os.path.exists(stage["output_file"]):
-                    success = run_agent(stage["module"], stage["input_file"], stage["output_file"])
-                    if not success:
-                        log_event("ORCHESTRATOR", f"Pipeline halted at {stage['module']} due to error.")
-                        pipeline_broken = True
-                        break 
-            
-            if not pipeline_broken and os.path.exists(PIPELINE_STAGES[-1]["output_file"]):
-                log_event("SYSTEM", "🎉 HR PIPELINE COMPLETED SUCCESSFULLY! 🎉")
-                os.rename(PIPELINE_STAGES[0]["input_file"], f"{PAYLOAD_DIR}/is0_processed_{int(time.time())}.txt")
-                
-        time.sleep(5) 
+        if found_row_idx:
+            range_to_update = f"A{found_row_idx}:N{found_row_idx}"
+            sheet.update(range_to_update, [row_data])
+            print(f"✅ [Orchestrator] อัปเดตข้อมูลใบงาน {job_id} ในแท็บ '{TARGET_SHEET_NAME}' แถวที่ {found_row_idx} สำเร็จ")
+        else:
+            sheet.append_row(row_data)
+            print(f"✅ [Orchestrator] บันทึกใบงานใหม่ {job_id} ลงแท็บ '{TARGET_SHEET_NAME}' สำเร็จ")
 
-if __name__ == "__main__":
-    setup_environment()
-    try:
-        run_pipeline()
-    except KeyboardInterrupt:
-        log_event("SYSTEM", "Orchestrator terminated by user.")
+    except Exception as e:
+        print(f"❌ [Orchestrator] เกิดข้อผิดพลาดในการบันทึก Google Sheets: {e}")
+
+def main():
+    if len(sys.argv) < 2:
+        print("❌ [Orchestrator] ขัดข้อง: ไม่ได้รับ Job ID จาก Agent 0")
+        sys.exit(1)
         
+    job_id = sys.argv[1].strip()
+    print(f"🛸 [Orchestrator] รับไม้ผลัด Job: {job_id} กำลังเข้าสู่ Workspace...")
+    
+    paths = config.get_workspace(job_id)
+    payload_path = os.path.join(paths["specs"], 'is0_job_ticket.json')
+    
+    with open(payload_path, 'r', encoding='utf-8') as f:
+        job_data = json.load(f)
+    
+    sync_job_tracker(job_data)
+        
+    agent1_input_path = os.path.join(paths["specs"], 'is1_input_spec.txt')
+    with open(agent1_input_path, 'w', encoding='utf-8') as f:
+        f.write(
+            f"Job ID: {job_data.get('job_id')}\n"
+            f"Position: {job_data.get('position')}\n"
+            f"Client: {job_data.get('client')}\n"
+            f"Contact Info: {job_data.get('contact_info', job_data.get('requester', '-'))}\n"
+            f"Headcount: {job_data.get('headcount', 1)}\n"
+            f"Budget: {job_data.get('budget')}\n"
+            f"Timeline/Target Start: {job_data.get('target_start_date', job_data.get('timeline'))}\n"
+            f"Remarks: {job_data.get('remarks', '-')}\n"
+        )
+        
+    print("🚀 [Orchestrator] เตรียมส่งไม้ผลัดปลุก Agent 1...")
+    
+    # [NEW ARCHITECTURE] เตะปลุกด้วย Absolute Path
+    next_agent = os.path.join(config.ENGINE_DIR, "agent_1_job_description.py")
+    subprocess.Popen([sys.executable, next_agent, job_id])
+
+if __name__ == '__main__':
+    main()

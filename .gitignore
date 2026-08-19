@@ -1,20 +1,23 @@
-# Python Cache
+# Credentials & Security Keys
+credentials/
+*.json
+.env
+
+# Logs & Runtime Execution Artifacts
+logs/
+workspaces/
+*.log
+orchestrator_log.txt
+
+# Python Virtual Environments & Cache
+.venv/
+env/
+venv/
+ENV/
 __pycache__/
 *.py[cod]
 
-# Logs
-orchestrator_log.txt
-*.log
-
-# Google Drive Shortcuts (ข้ามไฟล์พวกนี้ ไม่ต้องเซฟเข้า Git)
+# Google Drive Shortcuts
 *.gsheet
 *.gdoc
 *.gslides
-*.env
-
-# (Optional) ถ้าไม่อยากเก็บไฟล์ผลลัพธ์ของ Agent ให้เอา # ข้างล่างออก
-# payloads/*.json
-# payloads/*.txt
-
-# GCP Service Account Credentials
-gcp_credentials.json
