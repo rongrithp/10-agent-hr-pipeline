@@ -108,7 +108,7 @@ def format_telegram_card_md(payload: ExecutiveNotificationPayload) -> str:
 
 
 def dispatch_to_telegram(message_text: str) -> dict:
-    """ทำหน้าที่ยิง Telegram API จริงหากมี Token และ Chat ID หรือเปลี่ยนเป็น Dry-Run หากไม่มี"""
+    """ทำหน้าที่ยิง Telegram API จริงหากมี Token และ Chat ID หรือเปลี่ยนเป็น Dry-Run หากไม่มี (ส่งแบบ Plaintext เพียงครั้งเดียว)"""
     timestamp_str = datetime.now().isoformat()
 
     if not TELEGRAM_TOKEN or not CHAT_ID:
@@ -126,12 +126,12 @@ def dispatch_to_telegram(message_text: str) -> dict:
         payload = {
             "chat_id": CHAT_ID,
             "text": message_text,
-            "parse_mode": "Markdown"
+            "parse_mode": None
         }
         resp = requests.post(url, json=payload, timeout=10)
 
         if resp.status_code == 200:
-            print("🚀 [Agent 12] สั่งยิง Telegram API สำเร็จ! บรอดแคสต์ข้อความถึงผู้บริหารเรียบร้อย")
+            print("🚀 [Agent 12] สั่งยิง Telegram API (Plaintext) สำเร็จ! บรอดแคสต์ข้อความถึงผู้บริหารเรียบร้อย")
             return {
                 "delivery_mode": "LIVE_DISPATCH",
                 "telegram_api_status": "SUCCESS_SENT_TO_TELEGRAM",
@@ -141,18 +141,6 @@ def dispatch_to_telegram(message_text: str) -> dict:
             }
         else:
             print(f"⚠️ [Agent 12] Telegram API คืนค่าสถานะ {resp.status_code}: {resp.text}")
-            # Fallback to plain text if markdown formatting failed
-            payload_plain = {"chat_id": CHAT_ID, "text": message_text}
-            resp_plain = requests.post(url, json=payload_plain, timeout=10)
-            if resp_plain.status_code == 200:
-                print("🚀 [Agent 12] สั่งยิง Telegram API (Plaintext Fallback) สำเร็จ!")
-                return {
-                    "delivery_mode": "LIVE_DISPATCH",
-                    "telegram_api_status": "SUCCESS_PLAINTEXT_FALLBACK",
-                    "http_status_code": 200,
-                    "recipient_chat_id": str(CHAT_ID)[-4:].rjust(len(str(CHAT_ID)), "*"),
-                    "dispatched_at": timestamp_str
-                }
             return {
                 "delivery_mode": "LIVE_DISPATCH",
                 "telegram_api_status": f"FAILED_HTTP_{resp.status_code}",
@@ -186,6 +174,24 @@ def main():
     md_output_path = onboarding_dir / "is12_telegram_broadcast_card.md"
 
     print(f"🚀 [Agent 12] ตื่นขึ้นแล้ว! เข้าสู่ Workspace: {job_id}")
+
+    # Check for Duplicate Dispatch (Idempotency Control)
+    if json_output_path.exists():
+        try:
+            with open(json_output_path, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
+            existing_delivery = existing_data.get("notification_delivery", {})
+            existing_status = existing_delivery.get("telegram_api_status")
+            existing_mode = existing_delivery.get("delivery_mode")
+
+            if existing_mode == "LIVE_DISPATCH" and existing_status in ["SUCCESS_SENT_TO_TELEGRAM", "SUCCESS_PLAINTEXT_FALLBACK", "ALREADY_DISPATCHED"]:
+                print("ℹ️ [Agent 12] ข้ามการยิง Telegram: ข้อความถูกส่งสำเร็จไปแล้วก่อนหน้านี้ (Prevent Duplicate Retry)")
+                print(f"✅ [Agent 12] บันทึกไฟล์ {json_output_path.name} (Existing Payload Verified) ใน 05_onboarding_vault สำเร็จ")
+                print(f"✅ [Agent 12] บันทึกไฟล์ {md_output_path.name} (Existing Broadcast Card) ใน 05_onboarding_vault สำเร็จ")
+                print("🎉 [Agent 12] สำเร็จเรียบร้อย! จบกระบวนการทำงานทั้ง 12 Agents สมบูรณ์แบบ (Epoch 1 Completed) 🚀")
+                sys.exit(0)
+        except Exception as read_err:
+            print(f"⚠️ [Agent 12] ตรวจสอบ Payload เดิมล้มเหลว ดำเนินการกระจายข้อความใหม่: {read_err}")
 
     # Read All Upstream Master Records (IS11, IS10, IS0)
     is11_path = onboarding_dir / "is11_output_db_sync_payload.json"
