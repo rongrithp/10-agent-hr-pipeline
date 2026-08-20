@@ -146,11 +146,13 @@ gantt
 - **Status**: ✅ **COMPLETED** (`engine/resilience.py` module delivered with Exponential Backoff & Jitter retries)
 
 
-#### 🎯 Task 3.2: Malformed & Encrypted PDF Isolation Guard (Agent 4)
+#### 🎯 Task 3.2: Malformed & Encrypted PDF Isolation Guard (Agent 4) [COMPLETED]
 - **Problem**: ไฟล์ PDF ใน `02_sourcing_dropzone/` ที่ติดรหัสผ่าน (Encrypted PDF), ไฟล์ชำรุด (Corrupted PDF) หรือสแกนภาพ (Image-only Scanned PDF) อาจทำให้ PDF Extractor ค้างหรือ Crash
 - **Target Solution**:
   * เพิ่ม PDF Health Pre-checker ใน Agent 4 เพื่อแยกไฟล์ที่มีปัญหาไปไว้ที่ `02_sourcing_dropzone/.quarantine/`
   * ออกรายงานแจ้งเตือน HR พร้อมรันประมวลผลไฟล์ PDF ที่เหลือได้โดยไม่หยุดชะงัก
+- **Status**: ✅ **COMPLETED** (Pre-flight PDF Health Guard & `.quarantine/` Isolation Delivered)
+
 
 #### 🎯 Task 3.3: Vector Talent Search & Candidate Memory (Local Semantic Retrieval)
 - **Problem**: ข้อมูลผู้สมัครในอดีต (Agent 10 Talent Dossiers) ไม่สามารถค้นหาเชิงความหมาย (Semantic Search) ได้

@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-from typing import List, Literal
+from typing import List, Literal, Tuple
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -62,6 +62,12 @@ class CandidateScreeningResult(BaseModel):
     )
 
 
+class QuarantinedFileInfo(BaseModel):
+    filename: str = Field(description="ชื่อไฟล์ PDF ที่ถูกกักกัน")
+    reason: str = Field(description="สาเหตุความผิดพลาดที่ตรวจพบ")
+    quarantined_at: str = Field(description="เวลาประทับที่ทำการกักกันไฟล์")
+
+
 class CandidateScreeningPayload(BaseModel):
     job_id: str = Field(description="รหัสใบงาน (Job ID)")
     position_title: str = Field(description="ชื่อตำแหน่งงาน")
@@ -70,6 +76,64 @@ class CandidateScreeningPayload(BaseModel):
     on_hold_count: int = Field(description="จำนวนผู้สมัครสำรอง (ON_HOLD)")
     rejected_count: int = Field(description="จำนวนผู้สมัครที่ไม่ผ่านเกณฑ์ (REJECTED)")
     candidates: List[CandidateScreeningResult] = Field(description="รายการผลการคัดกรองผู้สมัครทุกคน เรียงตามคะแนน")
+    quarantined_files: List[QuarantinedFileInfo] = Field(
+        default_factory=list, description="รายการไฟล์ PDF ที่ชำรุด/ติดรหัสผ่านและถูกแยกเข้าโฟลเดอร์ .quarantine"
+    )
+
+
+def validate_and_isolate_pdf(pdf_path: Path, quarantine_dir: Path) -> Tuple[bool, str]:
+    """
+    ตรวจสอบความสมบูรณ์ของไฟล์ PDF (Pre-flight Health Check)
+    คืนค่า (is_healthy, failure_reason)
+    หากพบไฟล์ชำรุด (Corrupted), ติดรหัสผ่าน (Encrypted), หรือ 0 Bytes จะทำการย้ายไปที่ quarantine_dir
+    """
+    if not pdf_path.exists():
+        return False, "File does not exist"
+    
+    # 1. Check Zero Bytes
+    if pdf_path.stat().st_size == 0:
+        reason = "File size is 0 bytes (Empty PDF File)"
+        _isolate_file(pdf_path, quarantine_dir, reason)
+        return False, reason
+
+    if pypdf is None:
+        return True, ""
+
+    try:
+        reader = pypdf.PdfReader(str(pdf_path))
+        # 2. Check Encryption / Password Protection
+        if reader.is_encrypted:
+            reason = "PDF file is encrypted or password-protected"
+            _isolate_file(pdf_path, quarantine_dir, reason)
+            return False, reason
+
+        # 3. Check Page Count
+        if len(reader.pages) == 0:
+            reason = "PDF contains 0 pages"
+            _isolate_file(pdf_path, quarantine_dir, reason)
+            return False, reason
+
+        # 4. Test Text Stream Extraction from Page 1
+        _ = reader.pages[0].extract_text()
+        return True, ""
+
+    except Exception as e:
+        reason = f"PdfReadError / Malformed PDF Header ({type(e).__name__}: {str(e)[:100]})"
+        _isolate_file(pdf_path, quarantine_dir, reason)
+        return False, reason
+
+
+def _isolate_file(pdf_path: Path, quarantine_dir: Path, reason: str):
+    """ย้ายไฟล์ที่มีปัญหาไปไว้ในโฟลเดอร์ .quarantine/"""
+    try:
+        quarantine_dir.mkdir(parents=True, exist_ok=True)
+        target_path = quarantine_dir / pdf_path.name
+        if target_path.exists():
+            target_path.unlink()
+        pdf_path.rename(target_path)
+        print(f"🚨 [Agent 4 Isolation Guard] ย้ายไฟล์ชำรุด {pdf_path.name} ➔ .quarantine/ | สาเหตุ: {reason}")
+    except Exception as err:
+        print(f"⚠️ [Agent 4] ย้ายไฟล์ {pdf_path.name} ไป .quarantine/ ล้มเหลว: {err}")
 
 
 def extract_text_from_pdf(pdf_path: Path) -> str:
@@ -131,6 +195,22 @@ def format_formal_markdown(payload: CandidateScreeningPayload) -> str:
 
     breakdowns_text = "\n---\n\n".join(detailed_breakdowns)
 
+    quarantine_alert_block = ""
+    if payload.quarantined_files:
+        q_rows = []
+        for qf in payload.quarantined_files:
+            q_rows.append(f"- 🚨 **{qf.filename}** — สาเหตุ: `{qf.reason}` (กักกันเมื่อ: {qf.quarantined_at})")
+        q_list_text = "\n".join(q_rows)
+        quarantine_alert_block = f"""---
+
+## 🚨 QUARANTINE ALERTS (ไฟล์เรซูเม่ที่ถูกกักกัน)
+
+> **WARNING NOTICE**: พบไฟล์เรซูเม่ที่ไม่สามารถอ่านหรือติดรหัสผ่านในโฟลเดอร์ `02_sourcing_dropzone/.quarantine/`  
+> HR ควรติดต่อผู้สมัครเพื่อขอไฟล์ PDF ฉบับใหม่ ดังรายการต่อไปนี้:
+
+{q_list_text}
+"""
+
     return f"""# 📊 CANDIDATE SCREENING MATRIX & EVALUATION REPORT
 
 > **CONFIDENTIAL DOCUMENT** | Harrow Recruitment Process Automation  
@@ -147,6 +227,7 @@ def format_formal_markdown(payload: CandidateScreeningPayload) -> str:
 - **Qualified for Interview (`QUALIFIED_FOR_INTERVIEW`):** {payload.qualified_count}
 - **On Hold (`ON_HOLD`):** {payload.on_hold_count}
 - **Rejected (`REJECTED`):** {payload.rejected_count}
+- **Quarantined Malformed Files:** {len(payload.quarantined_files)}
 
 ---
 
@@ -155,7 +236,7 @@ def format_formal_markdown(payload: CandidateScreeningPayload) -> str:
 | Rank | Candidate Name | Current Role | Overall Score | Skills | Exp | Edu | Decision | Summary Highlights & Red Flags |
 | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 {matrix_table}
-
+{quarantine_alert_block}
 ---
 
 ## 👤 Detailed Candidate Evaluation Breakdowns
@@ -179,6 +260,7 @@ def main(job_id: str = None):
 
     paths = config.get_workspace(job_id)
     dropzone_dir = Path(paths["dropzone"])
+    quarantine_dir = dropzone_dir / ".quarantine"
     specs_dir = Path(paths["specs"])
     evaluations_dir = Path(paths["evaluations"])
 
@@ -189,14 +271,29 @@ def main(job_id: str = None):
 
     print(f"🚀 [Agent 4] ตื่นขึ้นแล้ว! เข้าสู่ Workspace: {job_id}")
 
-    # 1. Live PDF Resume Scanning in 02_sourcing_dropzone/
+    # 1. Pre-flight Health Check & Live PDF Resume Scanning in 02_sourcing_dropzone/
     pdf_files = list(dropzone_dir.glob("*.pdf"))
-    cv_data_str = ""
+    healthy_pdf_files = []
+    quarantined_records = []
 
-    if pdf_files:
-        print(f"📄 [Agent 4] ตรวจพบเรซูเม่ PDF จำนวน {len(pdf_files)} ไฟล์ใน 02_sourcing_dropzone/")
+    for pdf_file in sorted(pdf_files):
+        is_healthy, failure_reason = validate_and_isolate_pdf(pdf_file, quarantine_dir)
+        if is_healthy:
+            healthy_pdf_files.append(pdf_file)
+        else:
+            quarantined_records.append(
+                QuarantinedFileInfo(
+                    filename=pdf_file.name,
+                    reason=failure_reason,
+                    quarantined_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                )
+            )
+
+    cv_data_str = ""
+    if healthy_pdf_files:
+        print(f"📄 [Agent 4] ตรวจพบเรซูเม่ PDF ที่สมบูรณ์จำนวน {len(healthy_pdf_files)} ไฟล์ใน 02_sourcing_dropzone/")
         cv_data_parts = []
-        for pdf_file in sorted(pdf_files):
+        for pdf_file in healthy_pdf_files:
             extracted_text = extract_text_from_pdf(pdf_file)
             if extracted_text.strip():
                 cv_data_parts.append(f"--- Candidate Resume PDF File: {pdf_file.name} ---\n{extracted_text}")
@@ -206,13 +303,13 @@ def main(job_id: str = None):
         
         cv_data_str = "\n\n".join(cv_data_parts)
 
-    # 2. Fallback Mechanism: หากไม่มี PDF หรือสกัดข้อความไม่ได้ ให้ใช้ mock_cv_batch.json
+    # 2. Fallback Mechanism: หากไม่มี PDF ที่สมบูรณ์ ให้ใช้ mock_cv_batch.json
     if not cv_data_str.strip():
         cv_batch_path = dropzone_dir / "mock_cv_batch.json"
         if cv_batch_path.exists():
             with open(cv_batch_path, "r", encoding="utf-8") as f:
                 cv_data_str = f.read()
-            print(f"ℹ️ [Agent 4] ไม่พบไฟล์ PDF ใน dropzone ใช้ข้อมูลสำรองจาก {cv_batch_path.name}")
+            print(f"ℹ️ [Agent 4] ไม่พบไฟล์ PDF สมบูรณ์ใน dropzone ใช้ข้อมูลสำรองจาก {cv_batch_path.name}")
         else:
             other_cv_files = list(dropzone_dir.glob("*.json")) + list(dropzone_dir.glob("*.txt"))
             if other_cv_files:
@@ -268,7 +365,7 @@ def main(job_id: str = None):
 ข้อมูลเกณฑ์การคัดเลือก (JD & Sourcing Directives):
 {combined_specs}
 
-ข้อมูลเรซูเม่ผู้สมัคร (Candidate CVs / Live PDF Parsing Results):
+ข้อมูลเรซูเม่ผู้สมัคร (Candidate CVs / Healthy PDF Parsing Results):
 {cv_data_str}
 
 กรุณาคัดกรองและประเมินผู้สมัครทุกคนอย่างละเอียดถี่ถ้วน แล้วบันทึกผลลงใน Schema ให้สมบูรณ์
@@ -288,9 +385,9 @@ def main(job_id: str = None):
             ),
         )
 
-
         screening_payload = CandidateScreeningPayload.model_validate_json(response.text)
         screening_payload.job_id = job_id
+        screening_payload.quarantined_files = quarantined_records
 
         # Update candidate summary counts
         screening_payload.total_candidates_screened = len(screening_payload.candidates)
@@ -322,6 +419,8 @@ def main(job_id: str = None):
 
         print(f"✅ [Agent 4] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 4] บันทึกไฟล์ {md_output_path.name} (Formal Screening Matrix) สำเร็จ")
+        if quarantined_records:
+            print(f"🚨 [Agent 4] ตรวจพบและแยกไฟล์ชำรุดเข้า .quarantine/ ทั้งหมด {len(quarantined_records)} ไฟล์")
         print(f"🚀 [Agent 4] คัดกรองเรซูเม่เสร็จสิ้น เซฟลงโฟลเดอร์ 03_evaluations")
         return screening_payload.model_dump()
 
