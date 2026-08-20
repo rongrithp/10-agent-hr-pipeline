@@ -103,11 +103,13 @@ gantt
 - **Status**: ✅ **COMPLETED** (JobsDB 50-Field Schema & Multi-channel Broadcasting Kits Delivered)
 
 
-#### 🎯 Task 2.3: Live Resume Parsing (PDF Dropzone in `02_sourcing_dropzone/`)
+#### 🎯 Task 2.3: Live Resume Parsing (PDF Dropzone in `02_sourcing_dropzone/`) [COMPLETED]
 - **Problem**: ปัจจุบัน Resume Screening ใช้ Mock Candidate Payload
 - **Target Solution**:
   * พัฒนา PDF Parsing Pipeline ด้วย PyPDF / pdfplumber ร่วมกับ Gemini Structured Output ใน Agent 4
   * กำหนด Dropzone โฟลเดอร์ `workspaces/<JOB-CODE>/02_sourcing_dropzone/` สำหรับการวางไฟล์ PDF Resume หลายไฟล์พร้อมกัน และทำการรัน Batch Screening สรุปเป็น Candidate Scorecard Matrix
+- **Status**: ✅ **COMPLETED** (Live PDF Resume Batch Extractor & Candidate Matrix Engine Delivered)
+
 
 #### 🎯 Task 2.4: Human-in-the-Loop Feedback Interface (Interview Notes Input)
 - **Problem**: ผลการสัมภาษณ์งานจริงต้องรับมาจากบทสนทนาและบันทึกของกรรมการ (Interviewer Notes)

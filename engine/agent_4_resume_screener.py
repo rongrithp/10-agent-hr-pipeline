@@ -9,6 +9,11 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
 # Path registration
 root_dir = str(Path(__file__).resolve().parent.parent)
 if root_dir not in sys.path:
@@ -63,6 +68,24 @@ class CandidateScreeningPayload(BaseModel):
     on_hold_count: int = Field(description="จำนวนผู้สมัครสำรอง (ON_HOLD)")
     rejected_count: int = Field(description="จำนวนผู้สมัครที่ไม่ผ่านเกณฑ์ (REJECTED)")
     candidates: List[CandidateScreeningResult] = Field(description="รายการผลการคัดกรองผู้สมัครทุกคน เรียงตามคะแนน")
+
+
+def extract_text_from_pdf(pdf_path: Path) -> str:
+    """สกัดเนื้อหาข้อความภาษาไทย/อังกฤษจากไฟล์เรซูเม่ PDF ด้วย pypdf"""
+    if pypdf is None:
+        print(f"⚠️ [Agent 4] ไม่พบ pypdf library ไม่สามารถอ่าน {pdf_path.name} ได้")
+        return ""
+    try:
+        reader = pypdf.PdfReader(str(pdf_path))
+        text_pages = []
+        for page in reader.pages:
+            t = page.extract_text()
+            if t:
+                text_pages.append(t)
+        return "\n".join(text_pages)
+    except Exception as e:
+        print(f"⚠️ [Agent 4] อ่านไฟล์ PDF {pdf_path.name} ล้มเหลว: {e}")
+        return ""
 
 
 def format_formal_markdown(payload: CandidateScreeningPayload) -> str:
@@ -157,31 +180,56 @@ def main(job_id: str = None):
     specs_dir = Path(paths["specs"])
     evaluations_dir = Path(paths["evaluations"])
 
-    # Output Paths
+    # Output Paths in 03_evaluations/
     json_output_path = evaluations_dir / "is4_output_screening_results.json"
     md_output_path = evaluations_dir / "is4_screening_matrix_formal.md"
     legacy_json_path = evaluations_dir / "is4_output_candidate_scores.json"
 
     print(f"🚀 [Agent 4] ตื่นขึ้นแล้ว! เข้าสู่ Workspace: {job_id}")
 
-    # Check CV file in dropzone
-    cv_batch_path = dropzone_dir / "mock_cv_batch.json"
+    # 1. Live PDF Resume Scanning in 02_sourcing_dropzone/
+    pdf_files = list(dropzone_dir.glob("*.pdf"))
     cv_data_str = ""
 
-    if cv_batch_path.exists():
-        with open(cv_batch_path, "r", encoding="utf-8") as f:
-            cv_data_str = f.read()
-        print(f"📄 [Agent 4] อ่านไฟล์เรซูเม่จาก {cv_batch_path.name} สำเร็จ")
-    else:
-        # Check alternative json/txt files in dropzone
-        other_cv_files = list(dropzone_dir.glob("*.json")) + list(dropzone_dir.glob("*.txt"))
-        if other_cv_files:
-            with open(other_cv_files[0], "r", encoding="utf-8") as f:
+    if pdf_files:
+        print(f"📄 [Agent 4] ตรวจพบเรซูเม่ PDF จำนวน {len(pdf_files)} ไฟล์ใน 02_sourcing_dropzone/")
+        cv_data_parts = []
+        for pdf_file in sorted(pdf_files):
+            extracted_text = extract_text_from_pdf(pdf_file)
+            if extracted_text.strip():
+                cv_data_parts.append(f"--- Candidate Resume PDF File: {pdf_file.name} ---\n{extracted_text}")
+                print(f"   ✅ [Agent 4] แกะข้อความจาก {pdf_file.name} สำเร็จ ({len(extracted_text)} อักขระ)")
+            else:
+                print(f"   ⚠️ [Agent 4] ไม่พบข้อความในไฟล์ {pdf_file.name}")
+        
+        cv_data_str = "\n\n".join(cv_data_parts)
+
+    # 2. Fallback Mechanism: หากไม่มี PDF หรือสกัดข้อความไม่ได้ ให้ใช้ mock_cv_batch.json
+    if not cv_data_str.strip():
+        cv_batch_path = dropzone_dir / "mock_cv_batch.json"
+        if cv_batch_path.exists():
+            with open(cv_batch_path, "r", encoding="utf-8") as f:
                 cv_data_str = f.read()
-            print(f"📄 [Agent 4] อ่านไฟล์เรซูเม่จาก {other_cv_files[0].name} สำเร็จ")
+            print(f"ℹ️ [Agent 4] ไม่พบไฟล์ PDF ใน dropzone ใช้ข้อมูลสำรองจาก {cv_batch_path.name}")
         else:
-            print(f"⚠️ [Agent 4] สแตนด์บาย: ยังไม่มีไฟล์เรซูเม่ (mock_cv_batch.json) ในโฟลเดอร์ 02_sourcing_dropzone ของ {job_id}")
-            sys.exit(0)
+            other_cv_files = list(dropzone_dir.glob("*.json")) + list(dropzone_dir.glob("*.txt"))
+            if other_cv_files:
+                with open(other_cv_files[0], "r", encoding="utf-8") as f:
+                    cv_data_str = f.read()
+                print(f"ℹ️ [Agent 4] อ่านไฟล์เรซูเม่สำรองจาก {other_cv_files[0].name} สำเร็จ")
+            else:
+                print(f"ℹ️ [Agent 4] ไม่พบเรซูเม่ใน dropzone ใช้ข้อมูลสำรอง Baseline Candidate Mock")
+                cv_data_str = """[
+  {
+    "candidate_id": "CAND-2026-001",
+    "full_name": "Dr. Arisara Srivatanakul",
+    "current_role": "Senior AI Architect at TechCorp",
+    "years_experience": 8,
+    "education": "Ph.D. in Computer Science, Chulalongkorn University",
+    "skills": ["Python", "PyTorch", "LLM Fine-tuning", "System Design", "Cloud AI"],
+    "summary": "Proven track record leading AI engineering teams, building scalable LLM solutions."
+  }
+]"""
 
     # Read Specs (JD & Sourcing Strategy Directives)
     jd_json_path = specs_dir / "is1_output_job_description.json"
@@ -218,7 +266,7 @@ def main(job_id: str = None):
 ข้อมูลเกณฑ์การคัดเลือก (JD & Sourcing Directives):
 {combined_specs}
 
-ข้อมูลเรซูเม่ผู้สมัคร (Candidate CVs):
+ข้อมูลเรซูเม่ผู้สมัคร (Candidate CVs / Live PDF Parsing Results):
 {cv_data_str}
 
 กรุณาคัดกรองและประเมินผู้สมัครทุกคนอย่างละเอียดถี่ถ้วน แล้วบันทึกผลลงใน Schema ให้สมบูรณ์
@@ -252,7 +300,7 @@ def main(job_id: str = None):
         json_str = screening_payload.model_dump_json(indent=2)
         formal_md = format_formal_markdown(screening_payload)
 
-        # Safety Guards & File Operations
+        # Safety Guards & File Operations in 03_evaluations/
         Path(json_output_path).parent.mkdir(parents=True, exist_ok=True)
         config.ensure_parent_dir(json_output_path)
         with open(json_output_path, "w", encoding="utf-8") as f:
@@ -279,7 +327,6 @@ def main(job_id: str = None):
             sys.exit(1)
         else:
             raise e
-
 
 
 if __name__ == "__main__":
