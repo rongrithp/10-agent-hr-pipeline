@@ -36,10 +36,12 @@ def get_workspace(job_id: str) -> dict:
         "root": str(job_dir),
         "specs": str(job_dir / "01_specs"),
         "dropzone": str(job_dir / "02_sourcing_dropzone"),
+        "broadcasting_kits": str(job_dir / "03_broadcasting_kits"),
         "evaluations": str(job_dir / "03_evaluations"),
         "offers": str(job_dir / "04_offers_contracts"),
         "onboarding": str(job_dir / "05_onboarding_vault")
     }
+
     
     # สร้างโฟลเดอร์ Lifecycle ทั้ง 5 และ Root Workspace ทันทีที่มีการเรียกใช้
     for path_str in paths.values():

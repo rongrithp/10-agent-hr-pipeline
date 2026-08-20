@@ -274,7 +274,8 @@ def main(job_id: str = None):
         print(f"✅ [Agent 12] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 12] บันทึกไฟล์ {md_output_path.name} (Telegram Broadcast Card) ใน 05_onboarding_vault สำเร็จ")
         print("🎉 [Agent 12] สำเร็จเรียบร้อย! จบกระบวนการทำงานทั้ง 12 Agents สมบูรณ์แบบ (Epoch 1 Completed) 🚀")
-        return notify_payload.model_dump()
+        return exec_payload.model_dump()
+
 
     except Exception as e:
         print(f"❌ [Agent 12] ระบบสมองประมวลผลล้มเหลว: {e}")

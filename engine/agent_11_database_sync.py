@@ -398,7 +398,8 @@ def main(job_id: str = None):
 
         print(f"✅ [Agent 11] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 11] บันทึกไฟล์ {md_output_path.name} (Formal DB Audit Report) ใน 05_onboarding_vault สำเร็จ")
-        return audit_payload.model_dump()
+        return db_payload.model_dump()
+
 
     except Exception as e:
         print(f"❌ [Agent 11] ระบบสมองประมวลผลล้มเหลว: {e}")
