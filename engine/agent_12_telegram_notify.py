@@ -16,6 +16,8 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 import config
+from engine.resilience import retry_with_backoff
+
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -107,8 +109,10 @@ def format_telegram_card_md(payload: ExecutiveNotificationPayload) -> str:
 """
 
 
+@retry_with_backoff(max_retries=3, initial_delay=2.0)
 def dispatch_to_telegram(message_text: str) -> dict:
     """ทำหน้าที่ยิง Telegram API จริงหากมี Token และ Chat ID หรือเปลี่ยนเป็น Dry-Run หากไม่มี (ส่งแบบ Plaintext เพียงครั้งเดียว)"""
+
     timestamp_str = datetime.now().isoformat()
 
     if not TELEGRAM_TOKEN or not CHAT_ID:

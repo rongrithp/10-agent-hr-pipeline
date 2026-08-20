@@ -120,20 +120,48 @@ gantt
 
 ---
 
-## 🔵 4. Epoch 3: Enterprise Automation & Autonomous Ops [FUTURE BACKLOG]
+## 🔵 4. Epoch 3: Enterprise Hardening & Operational Resilience [FUTURE BACKLOG]
 
 ### 4.1 Vision & Long-term Goals
-ก้าวสู่การเป็น **Autonomous HR Agent Network** ที่สามารถดำเนินการโพสต์งาน ตรวจสอบผู้สมัคร และวางระบบวิเคราะห์ข้อมูลเชิงลึกได้เองโดยอัตโนมัติในระดับ Enterprise
+ยกระดับสู่ระบบ **Enterprise-Grade High-Reliability HR Agent Network** โดยเน้นความเสถียรและความทนทานต่อความผิดพลาด (Fault Tolerance), การป้องกันข้อมูลเสียหาย, การค้นหาข้อมูลเชิงความหมายใน Talent Pool และการรองรับการประมวลผลตำแหน่งงานหลายตำแหน่งพร้อมกัน (Concurrent Pipelines)
 
-### 4.2 Future Backlog Features
+> [!IMPORTANT]
+> **Architectural Decision Record (ADR-001: Human-as-the-Bridge for Broadcasting Kits)**
+> - **Context**: เดิมวางแผนใช้ Headless Browser Automation (Playwright) เพื่ออัปโหลดประกาศงานไปยัง JobsDB, LinkedIn, และ JobStreet อัตโนมัติ
+> - **Decision**: ตัดระบบ Playwright Automation ออก และใช้สถาปัตยกรรม **"Human-as-the-Bridge"** ร่วมกับ Broadcasting Kits ที่จัดเตรียมไว้ใน `03_broadcasting_kits/`
+> - **Rationale**:
+>   1. **System Reliability > 95%**: การพึ่งพา Web Automation เสี่ยงต่อความล้มเหลวสูงจาก DOM Mutation, Anti-bot Bot Detection, Cloudflare Captcha และ Account Ban
+>   2. **Zero Overhead Maintenance**: ลดภาระงานรักษา Script เมื่อแพลตฟอร์มปรับปรุง UI
+>   3. **Human Control & Audit**: ให้ HR Review สื่อและปรับแต่งแคปชันก่อนกดเผยแพร่จริง
 
-1. **Headless Browser Automation (Playwright Integration)**:
-   - เชื่อมต่อ Playwright สำหรับ Headless Browser Automation ใน Agent 3 เพื่อล็อกอินและอัปโหลด Job Posting Payload ไปยัง JobsDB, LinkedIn Recruiter, และ JobThai โดยอัตโนมัติโดยไม่ต้องพึ่งพามนุษย์กดคีย์ข้อมูล
-2. **Advanced Candidate Analytics & Talent Pool Intelligence**:
-   - พัฒนา Analytics Dashboard สำหรับวิเคราะห์กระบวนการสรรหา (Time-to-Hire, Conversion Rate ในแต่ละ Stage, Channel Efficiency Index)
-   - สร้าง Semantic Search & Vector Database สำหรับค้นหาแคนดิเดตเก่าใน Talent Pool (Agent 10 Dossier) ด้วย Embeddings
-3. **Multi-Role Orchestration & Parallel Pipelines**:
-   - อัปเกรด Orchestration Layer ให้สามารถรัน Multiple Job Openings พร้อมกันได้แบบ Parallel / Concurrent Executions พร้อมระบบ Priority Queuing และ Central Resource Allocation
+---
+
+### 4.2 Key Roadmap Tasks & Deliverables
+
+#### 🎯 Task 3.1: API Network Resilience & Exponential Backoff Retries [COMPLETED]
+- **Problem**: การเรียก API ภายนอก (Gemini API, Telegram Bot API, Google Sheets API) อาจล้มเหลวจาก Transient Network Error หรือ Rate Limiting (HTTP 429 / 503)
+- **Target Solution**:
+  * เพิ่ม Decorator `@retry_with_backoff` สำหรับการเรียก API ทั้งหมดใน Agent 0 ถึง 12
+  * รองรับ Exponential Backoff with Jitter เพื่อความเสถียรระดับ Enterprise
+- **Status**: ✅ **COMPLETED** (`engine/resilience.py` module delivered with Exponential Backoff & Jitter retries)
+
+
+#### 🎯 Task 3.2: Malformed & Encrypted PDF Isolation Guard (Agent 4)
+- **Problem**: ไฟล์ PDF ใน `02_sourcing_dropzone/` ที่ติดรหัสผ่าน (Encrypted PDF), ไฟล์ชำรุด (Corrupted PDF) หรือสแกนภาพ (Image-only Scanned PDF) อาจทำให้ PDF Extractor ค้างหรือ Crash
+- **Target Solution**:
+  * เพิ่ม PDF Health Pre-checker ใน Agent 4 เพื่อแยกไฟล์ที่มีปัญหาไปไว้ที่ `02_sourcing_dropzone/.quarantine/`
+  * ออกรายงานแจ้งเตือน HR พร้อมรันประมวลผลไฟล์ PDF ที่เหลือได้โดยไม่หยุดชะงัก
+
+#### 🎯 Task 3.3: Vector Talent Search & Candidate Memory (Local Semantic Retrieval)
+- **Problem**: ข้อมูลผู้สมัครในอดีต (Agent 10 Talent Dossiers) ไม่สามารถค้นหาเชิงความหมาย (Semantic Search) ได้
+- **Target Solution**:
+  * สร้าง Local Vector Embeddings (ChromaDB / FAISS / Gemini Embeddings) สำหรับจัดเก็บ Talent Dossiers
+  * เพิ่ม Semantic Search Interface ให้ HR ค้นหาผู้สมัครเก่าใน Talent Pool ตามทักษะ หรือโปรไฟล์ความตรงได้อย่างรวดเร็ว
+
+#### 🎯 Task 3.4: Multi-Role Concurrent Orchestration
+- **Problem**: ปัจจุบัน Orchestrator รองรับการรันทีละ Job Ticket
+- **Target Solution**:
+  * อัปเกรด `main_orchestrator.py` ให้รองรับ Parallel/Async IO Executions สำหรับประมวลผลหลายตำแหน่งงานพร้อมกัน (Multi-Job Tickets) ด้วย Python `asyncio` / ThreadPoolExecutor
 
 ---
 
@@ -143,5 +171,6 @@ gantt
 | :---: | :--- | :--- | :---: | :---: |
 | **Epoch 1** | Core Foundation & Data Contracts | 12-Agent Pipeline, Dual Output (.json/.md), Schema Validation, Telegram Live Dispatch | Q3 2026 | ✅ **COMPLETED** |
 | **Epoch 2** | Platform Integration & Production Inputs | In-Memory Orchestrator, JobsDB 50-field Schema, PDF Resume Dropzone, Human-in-the-Loop Notes | Q4 2026 | ✅ **COMPLETED** |
-| **Epoch 3** | Enterprise Automation & Autonomous Ops | Playwright Job Board Automation, Vector Talent Search, Multi-Role Parallel Pipeline | Q1 2027 | 🔵 **FUTURE** |
+| **Epoch 3** | Enterprise Hardening & Operational Resilience | API Backoff Retries, PDF Quarantine Guard, Vector Talent Search, Multi-Role Parallel Pipeline | Q1 2027 | 🔵 **FUTURE** |
+
 

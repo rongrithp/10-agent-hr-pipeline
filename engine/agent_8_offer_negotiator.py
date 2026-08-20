@@ -16,6 +16,8 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 import config
+from engine.resilience import generate_content_with_retry
+
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -239,7 +241,8 @@ def main(job_id: str = None):
 
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
+        response = generate_content_with_retry(
+            client=client,
             model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
@@ -249,6 +252,7 @@ def main(job_id: str = None):
                 temperature=0.3,
             ),
         )
+
 
         offer_payload = OfferPackagePayload.model_validate_json(response.text)
         offer_payload.job_id = job_id

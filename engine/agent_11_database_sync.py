@@ -19,6 +19,8 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 import config
+from engine.resilience import retry_with_backoff
+
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -197,8 +199,10 @@ def format_formal_markdown(payload: DBSyncAuditPayload) -> str:
 """
 
 
+@retry_with_backoff(max_retries=3, initial_delay=2.0)
 def try_google_sheets_sync(job_id: str, is10_data: dict, is8_data: dict, is9_data: dict, is7_data: dict, is0_data: dict) -> bool:
     """พยายามซิงค์ข้อมูลลง Google Sheets หากกุญแจ GCP พร้อมใช้งาน"""
+
     if not os.path.exists(CREDENTIALS_FILE):
         print(f"ℹ️ [Agent 11] ไม่พบไฟล์กุญแจ GCP {CREDENTIALS_FILE} (ข้ามการซิงค์คลาวด์ Google Sheets)")
         return False
