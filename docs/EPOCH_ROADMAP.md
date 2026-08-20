@@ -87,11 +87,13 @@ gantt
 
 ### 3.2 Key Roadmap Tasks & Deliverables
 
-#### 🎯 Task 2.1: Refactor `main_orchestrator.py` สู่ In-Memory Direct Pipeline
+#### 🎯 Task 2.1: Refactor `main_orchestrator.py` สู่ In-Memory Direct Pipeline [COMPLETED]
 - **Problem**: ปัจจุบันการส่งต่อข้อมูลระหว่าง Agent พึ่งพาการเขียนไฟล์และอ่านไฟล์ `.json` กลับขึ้นมาใหม่ ทำให้เกิด I/O Overhead
 - **Target Solution**:
   * ปรับปรับ `main_orchestrator.py` ให้อ่าน/เขียน In-Memory Python Objects (Pydantic models) ระหว่าง Agent execution ได้โดยตรง
   * ยังคงรักษาสัญญาณ Async Disk Write สำหรับบันทึก Audit Logs และ Vault Artifacts (`.json` + `.md`) ไว้สำหรับการตรวจสอบย้อนหลัง
+- **Status**: ✅ **COMPLETED** (In-Memory Direct Engine Refactored for 13 Agents across 5 Lifecycles)
+
 
 #### 🎯 Task 2.2: Deep Dive Agent 3 สำหรับ JobsDB 50-Field Payload & แยกโฟลเดอร์ `03_broadcasting_kits/`
 - **Problem**: การประกาศงานในแพลตฟอร์มหลัก เช่น JobsDB/JobStreet ต้องการ Metadata ละเอียดกว่า 50 ฟิลด์ (เช่น Salary Range Code, Job Function Category Code, Work Location Coordinates, Benefits Flags)

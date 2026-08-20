@@ -166,12 +166,14 @@ def format_formal_markdown(jd: JobDescriptionPayload) -> str:
 """
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("❌ [Agent 1] ขัดข้อง: ไม่ได้รับ Job ID")
-        sys.exit(1)
+def main(job_id: str = None):
+    if not job_id:
+        if len(sys.argv) >= 2:
+            job_id = sys.argv[1]
+        else:
+            print("❌ [Agent 1] ขัดข้อง: ไม่ได้รับ Job ID")
+            raise ValueError("ไม่ได้รับ Job ID")
 
-    job_id = sys.argv[1]
     paths = config.get_workspace(job_id)
     specs_dir = Path(paths["specs"])
 
@@ -195,8 +197,12 @@ def main():
             ticket_content = f.read()
         print(f"📄 [Agent 1] ไม่พบ ticket json อ่านข้อมูลจาก {input_spec_path.name} สำเร็จ")
     else:
-        print(f"❌ [Agent 1] ขัดข้อง: ไม่พบไฟล์ Ticket หรือ Input Spec ใน {specs_dir}")
-        sys.exit(1)
+        err_msg = f"ไม่พบไฟล์ Ticket หรือ Input Spec ใน {specs_dir}"
+        print(f"❌ [Agent 1] ขัดข้อง: {err_msg}")
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise RuntimeError(err_msg)
 
     system_instruction = (
         "คุณคือ Agent 1 (Corporate-Grade HR Copywriter & Talent Acquisition Strategist)\n"
@@ -258,10 +264,15 @@ def main():
 
         print(f"✅ [Agent 1] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 1] บันทึกไฟล์ {md_output_path.name} (Formal Document) สำเร็จ")
+        return jd_payload.model_dump()
 
     except Exception as e:
         print(f"❌ [Agent 1] ระบบสมองประมวลผลล้มเหลว: {e}")
-        sys.exit(1)
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise e
+
 
 
 if __name__ == "__main__":

@@ -123,12 +123,14 @@ def format_formal_markdown(postings: JobPostingsPayload) -> str:
 """
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("❌ [Agent 3] ขัดข้อง: ไม่ได้รับ Job ID")
-        sys.exit(1)
+def main(job_id: str = None):
+    if not job_id:
+        if len(sys.argv) >= 2:
+            job_id = sys.argv[1]
+        else:
+            print("❌ [Agent 3] ขัดข้อง: ไม่ได้รับ Job ID")
+            raise ValueError("ไม่ได้รับ Job ID")
 
-    job_id = sys.argv[1]
     paths = config.get_workspace(job_id)
     specs_dir = Path(paths["specs"])
 
@@ -163,8 +165,12 @@ def main():
             context_parts.append(f"--- Input Spec ---\n{f.read()}")
 
     if not context_parts:
-        print(f"❌ [Agent 3] ขัดข้อง: ไม่พบไฟล์ข้อมูลนำเข้าใน {specs_dir}")
-        sys.exit(1)
+        err_msg = f"ไม่พบไฟล์ข้อมูลนำเข้าใน {specs_dir}"
+        print(f"❌ [Agent 3] ขัดข้อง: {err_msg}")
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise RuntimeError(err_msg)
 
     combined_input = "\n\n".join(context_parts)
     print(f"📄 [Agent 3] ดึงข้อมูล Job Description และ Sourcing Strategy สำเร็จ")
@@ -220,10 +226,14 @@ def main():
 
         print(f"✅ [Agent 3] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 3] บันทึกไฟล์ {md_output_path.name} (Ready Copywriting Pack) สำเร็จ")
+        return postings_payload.model_dump()
 
     except Exception as e:
         print(f"❌ [Agent 3] ระบบสมองประมวลผลล้มเหลว: {e}")
-        sys.exit(1)
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise e
 
 
 if __name__ == "__main__":

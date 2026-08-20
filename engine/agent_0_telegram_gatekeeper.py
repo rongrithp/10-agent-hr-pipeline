@@ -266,6 +266,97 @@ def handle_message(message):
     except Exception as e:
         bot.reply_to(message, f"❌ [API Error] การเชื่อมต่อ AI ล้มเหลว: {e}")
 
+def main(job_id: str = None) -> dict:
+    if not job_id:
+        if len(sys.argv) > 1:
+            job_id = sys.argv[1].strip()
+        else:
+            job_id = "JOB-VERIFY-2026"
+
+    print(f"🚀 [Agent 0] ตื่นขึ้นแล้ว! เข้าสู่ Workspace: {job_id}")
+    paths = config.get_workspace(job_id)
+    specs_dir = Path(paths["specs"])
+    
+    target_path = specs_dir / "is0_job_ticket.json"
+    intake_payload_path = specs_dir / "is0_output_job_intake_payload.json"
+    summary_card_path = specs_dir / "is0_intake_summary_card.md"
+    input_spec_path = specs_dir / "is1_input_spec.txt"
+
+    data = {}
+    if target_path.exists():
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print(f"📄 [Agent 0] โหลดข้อมูล Intake Ticket จาก {target_path.name} สำเร็จ")
+    elif intake_payload_path.exists():
+        with open(intake_payload_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print(f"📄 [Agent 0] โหลดข้อมูล Intake Payload จาก {intake_payload_path.name} สำเร็จ")
+    else:
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        data = {
+            "job_id": job_id,
+            "client": "Harrow International School",
+            "contact_info": "HR Talent Acquisition Team",
+            "position": "Lead AI Engineer",
+            "headcount": 1,
+            "budget": "150,000 THB",
+            "target_start_date": "2026-09-01",
+            "status": "OPEN",
+            "current_stage": "OPEN",
+            "open_date": today,
+            "workspace_path": str(paths["root"]),
+            "remarks": "Automated verification ticket"
+        }
+        config.ensure_parent_dir(target_path)
+        with open(target_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        print(f"✅ [Agent 0] สร้างข้อมูล Intake Ticket ใหม่: {target_path.name}")
+
+    # Dual Output Generation (.json + .md)
+    config.ensure_parent_dir(intake_payload_path)
+    with open(intake_payload_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+    summary_md = f"""# 📋 Job Intake Summary Card (IS0)
+
+- **Job ID**: `{data.get('job_id')}`
+- **Client / Organization**: {data.get('client', '-')}
+- **Position**: {data.get('position', '-')}
+- **Headcount**: {data.get('headcount', 1)}
+- **Salary Budget**: {data.get('budget', '-')}
+- **Target Start Date**: {data.get('target_start_date', data.get('timeline', '-'))}
+- **Contact Info**: {data.get('contact_info', '-')}
+- **Remarks**: {data.get('remarks', '-')}
+
+> *Authorized by Agent 0 (Telegram Gatekeeper)*
+"""
+    config.ensure_parent_dir(summary_card_path)
+    with open(summary_card_path, "w", encoding="utf-8") as f:
+        f.write(summary_md)
+
+    # Input Spec for Agent 1
+    config.ensure_parent_dir(input_spec_path)
+    with open(input_spec_path, "w", encoding="utf-8") as f:
+        f.write(
+            f"Job ID: {data.get('job_id')}\n"
+            f"Position: {data.get('position')}\n"
+            f"Client: {data.get('client')}\n"
+            f"Contact Info: {data.get('contact_info', '-')}\n"
+            f"Headcount: {data.get('headcount', 1)}\n"
+            f"Budget: {data.get('budget')}\n"
+            f"Timeline/Target Start: {data.get('target_start_date', data.get('timeline'))}\n"
+            f"Remarks: {data.get('remarks', '-')}\n"
+        )
+
+    sync_job_tracker(data)
+    print(f"✅ [Agent 0] บันทึกไฟล์ {intake_payload_path.name} (Structured Payload) สำเร็จ")
+    print(f"✅ [Agent 0] บันทึกไฟล์ {summary_card_path.name} (Summary Card) สำเร็จ")
+    return data
+
+
 if __name__ == "__main__":
-    print("🚀 [Agent 0] Gatekeeper (Enterprise Workspace Mode) is ONLINE...")
-    bot.infinity_polling()
+    if len(sys.argv) > 1 and sys.argv[1].startswith("JOB-"):
+        main(sys.argv[1])
+    else:
+        print("🚀 [Agent 0] Gatekeeper (Enterprise Workspace Mode) is ONLINE...")
+        bot.infinity_polling()

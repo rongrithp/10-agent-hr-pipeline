@@ -144,12 +144,14 @@ def format_formal_markdown(payload: CandidateScreeningPayload) -> str:
 """
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("❌ [Agent 4] ขัดข้อง: ไม่ได้รับ Job ID")
-        sys.exit(1)
+def main(job_id: str = None):
+    if not job_id:
+        if len(sys.argv) >= 2:
+            job_id = sys.argv[1]
+        else:
+            print("❌ [Agent 4] ขัดข้อง: ไม่ได้รับ Job ID")
+            raise ValueError("ไม่ได้รับ Job ID")
 
-    job_id = sys.argv[1]
     paths = config.get_workspace(job_id)
     dropzone_dir = Path(paths["dropzone"])
     specs_dir = Path(paths["specs"])
@@ -269,10 +271,15 @@ def main():
         print(f"✅ [Agent 4] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 4] บันทึกไฟล์ {md_output_path.name} (Formal Screening Matrix) สำเร็จ")
         print(f"🚀 [Agent 4] คัดกรองเรซูเม่เสร็จสิ้น เซฟลงโฟลเดอร์ 03_evaluations")
+        return screening_payload.model_dump()
 
     except Exception as e:
         print(f"❌ [Agent 4] ระบบสมองประมวลผลล้มเหลว: {e}")
-        sys.exit(1)
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise e
+
 
 
 if __name__ == "__main__":

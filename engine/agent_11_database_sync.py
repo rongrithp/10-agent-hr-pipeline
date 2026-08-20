@@ -274,12 +274,14 @@ def try_google_sheets_sync(job_id: str, is10_data: dict, is8_data: dict, is9_dat
         return False
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("❌ [Agent 11] ขัดข้อง: ไม่ได้รับ Job ID")
-        sys.exit(1)
+def main(job_id: str = None):
+    if not job_id:
+        if len(sys.argv) >= 2:
+            job_id = sys.argv[1]
+        else:
+            print("❌ [Agent 11] ขัดข้อง: ไม่ได้รับ Job ID")
+            raise ValueError("ไม่ได้รับ Job ID")
 
-    job_id = sys.argv[1]
     paths = config.get_workspace(job_id)
     specs_dir = Path(paths["specs"])
     evaluations_dir = Path(paths["evaluations"])
@@ -396,10 +398,15 @@ def main():
 
         print(f"✅ [Agent 11] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 11] บันทึกไฟล์ {md_output_path.name} (Formal DB Audit Report) ใน 05_onboarding_vault สำเร็จ")
+        return audit_payload.model_dump()
 
     except Exception as e:
         print(f"❌ [Agent 11] ระบบสมองประมวลผลล้มเหลว: {e}")
-        sys.exit(1)
+        if __name__ == "__main__":
+            sys.exit(1)
+        else:
+            raise e
+
 
 
 if __name__ == "__main__":

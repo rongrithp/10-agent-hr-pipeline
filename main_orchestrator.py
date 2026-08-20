@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import time
-import subprocess
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
@@ -14,6 +13,21 @@ if root_dir not in sys.path:
 
 import config
 
+# Imports for In-Memory Direct Pipeline Execution (Agent 0 - 12)
+from engine.agent_0_telegram_gatekeeper import main as run_agent_0
+from engine.agent_1_job_description import main as run_agent_1
+from engine.agent_2_sourcing_strategist import main as run_agent_2
+from engine.agent_3_content_broadcaster import main as run_agent_3
+from engine.agent_4_resume_screener import main as run_agent_4
+from engine.agent_5_interview_scheduler import main as run_agent_5
+from engine.agent_6_interview_evaluator import main as run_agent_6
+from engine.agent_7_compliance_checker import main as run_agent_7
+from engine.agent_8_offer_negotiator import main as run_agent_8
+from engine.agent_9_onboarding_planner import main as run_agent_9
+from engine.agent_10_talent_profiler import main as run_agent_10
+from engine.agent_11_database_sync import main as run_agent_11
+from engine.agent_12_telegram_notify import main as run_agent_12
+
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -22,7 +36,7 @@ CREDENTIALS_FILE = str(config.GCP_CREDENTIALS_PATH)
 TARGET_SHEET_NAME = 'Job_Tracker'
 
 
-def sync_job_tracker(data):
+def sync_job_tracker(data: dict):
     """บันทึกหรืออัปเดตใบงานลงในแท็บ Job_Tracker ตามลำดับคอลัมน์ A ถึง N"""
     if not os.path.exists(CREDENTIALS_FILE):
         print(f"⚠️ [Orchestrator] ไม่พบไฟล์กุญแจ GCP Credentials: {CREDENTIALS_FILE}")
@@ -68,10 +82,9 @@ def sync_job_tracker(data):
         fee_amount = data.get("fee_amount", "")
         payment_status = data.get("payment_status", "Pending")
 
-        # อ้างอิง Workspace Path ผ่าน config.get_workspace เสมอ
         workspace_path = data.get("workspace_path")
         if not workspace_path and job_id:
-            workspace_path = config.get_workspace(job_id)["root"]
+            workspace_path = str(config.get_workspace(job_id)["root"])
         elif not workspace_path:
             workspace_path = ""
 
@@ -103,83 +116,80 @@ def sync_job_tracker(data):
 
 
 def run_orchestrated_pipeline(job_id: str):
-    """ทำหน้าที่เป็นศูนย์กลางควบคุมลำดับการรัน Agents ทั้งหมด 12 ตัวตามลำดับ (Sequential Orchestration)"""
+    """ทำหน้าที่เป็น Central State Engine ควบคุมการรัน In-Memory Pipeline ครบถ้วน 13 Agents Across 5 Lifecycles"""
     print("\n" + "=" * 80)
-    print(f"🛸 CENTRAL PIPELINE ORCHESTRATOR FOR WORKSPACE: {job_id}")
+    print(f"🛸 CENTRAL IN-MEMORY PIPELINE ENGINE FOR WORKSPACE: {job_id}")
     print(f"⏰ Execution Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 80 + "\n")
 
-    pipeline_agents = [
-        ("Agent 1 (Job Description Generator)", "agent_1_job_description.py"),
-        ("Agent 2 (Sourcing Strategist)", "agent_2_sourcing_strategist.py"),
-        ("Agent 3 (Content Broadcaster)", "agent_3_content_broadcaster.py"),
-        ("Agent 4 (Resume Screener Engine)", "agent_4_resume_screener.py"),
-        ("Agent 5 (Interview Scheduler)", "agent_5_interview_scheduler.py"),
-        ("Agent 6 (Interview Evaluator Engine)", "agent_6_interview_evaluator.py"),
-        ("Agent 7 (Compliance Checker)", "agent_7_compliance_checker.py"),
-        ("Agent 8 (Offer Negotiator Engine)", "agent_8_offer_negotiator.py"),
-        ("Agent 9 (Onboarding Planner)", "agent_9_onboarding_planner.py"),
-        ("Agent 10 (Master Talent Profiler)", "agent_10_talent_profiler.py"),
-        ("Agent 11 (Enterprise Database Sync)", "agent_11_database_sync.py"),
-        ("Agent 12 (Executive Telegram Notifier)", "agent_12_telegram_notify.py"),
+    pipeline_stages = [
+        # Lifecycle 1: Job Specs & Sourcing Assets
+        ("Lifecycle 1: Job Spec & Sourcing", "Agent 0 (Telegram Gatekeeper)", run_agent_0),
+        ("Lifecycle 1: Job Spec & Sourcing", "Agent 1 (Job Spec Synthesizer)", run_agent_1),
+        ("Lifecycle 1: Job Spec & Sourcing", "Agent 2 (Sourcing Strategist)", run_agent_2),
+        ("Lifecycle 1: Job Spec & Sourcing", "Agent 3 (Content Broadcaster)", run_agent_3),
+        # Lifecycle 2 & 3: Screening & Evaluation
+        ("Lifecycles 2 & 3: Screening & Evaluation", "Agent 4 (Resume Screener Engine)", run_agent_4),
+        ("Lifecycles 2 & 3: Screening & Evaluation", "Agent 5 (Interview Scheduler)", run_agent_5),
+        ("Lifecycles 2 & 3: Screening & Evaluation", "Agent 6 (Interview Evaluator Engine)", run_agent_6),
+        # Lifecycle 4: Compliance & Offer
+        ("Lifecycle 4: Compliance & Offer", "Agent 7 (Compliance Checker)", run_agent_7),
+        ("Lifecycle 4: Compliance & Offer", "Agent 8 (Offer Negotiator Engine)", run_agent_8),
+        # Lifecycle 5: Onboarding, DB Sync & Notification
+        ("Lifecycle 5: Onboarding & Notification", "Agent 9 (Onboarding Planner)", run_agent_9),
+        ("Lifecycle 5: Onboarding & Notification", "Agent 10 (Master Talent Profiler)", run_agent_10),
+        ("Lifecycle 5: Onboarding & Notification", "Agent 11 (Enterprise Database Sync)", run_agent_11),
+        ("Lifecycle 5: Onboarding & Notification", "Agent 12 (Executive Telegram Notifier)", run_agent_12),
     ]
 
     summary_results = []
+    pipeline_state = {}
     overall_start_time = time.time()
+    total_steps = len(pipeline_stages)
 
-    for agent_name, script_file in pipeline_agents:
-        script_path = os.path.join(config.ENGINE_DIR, script_file)
-        print(f"\n▶️ [Orchestrator] Executing {agent_name}...")
-        print(f"   Script Path: {script_path}")
+    for idx, (lifecycle_name, agent_name, agent_func) in enumerate(pipeline_stages, start=1):
+        step_str = f"[{idx}/{total_steps}]"
+        print(f"\n▶️ {step_str} [{lifecycle_name}] Running {agent_name} (In-Memory)...")
 
         step_start = time.time()
         try:
-            res = subprocess.run(
-                [sys.executable, script_path, job_id],
-                cwd=config.BASE_DIR,
-                text=True,
-                check=False
-            )
+            # Direct In-Memory Function Call
+            result_payload = agent_func(job_id)
             step_duration = time.time() - step_start
 
-            if res.returncode == 0:
-                print(f"   ✅ {agent_name} COMPLETED (Exit Code: 0, Time: {step_duration:.2f}s)")
-                summary_results.append({
-                    "name": agent_name,
-                    "status": "PASSED",
-                    "code": 0,
-                    "time": f"{step_duration:.2f}s"
-                })
-            else:
-                print(f"   ❌ {agent_name} FAILED with Exit Code {res.returncode}")
-                summary_results.append({
-                    "name": agent_name,
-                    "status": "FAILED",
-                    "code": res.returncode,
-                    "time": f"{step_duration:.2f}s"
-                })
-                print(f"\n🛑 Pipeline Execution Halted due to failure in {agent_name}")
-                sys.exit(res.returncode)
+            pipeline_state[agent_name] = result_payload
+
+            print(f"   ✅ {step_str} {agent_name} COMPLETED (In-Memory Execution, Time: {step_duration:.2f}s)")
+            summary_results.append({
+                "step": step_str,
+                "lifecycle": lifecycle_name,
+                "name": agent_name,
+                "status": "PASSED",
+                "code": 0,
+                "time": f"{step_duration:.2f}s"
+            })
 
         except Exception as err:
             step_duration = time.time() - step_start
-            print(f"   ❌ {agent_name} EXCEPTION: {err}")
+            print(f"   ❌ {step_str} {agent_name} FAILED / EXCEPTION: {err}")
             summary_results.append({
+                "step": step_str,
+                "lifecycle": lifecycle_name,
                 "name": agent_name,
-                "status": "EXCEPTION",
+                "status": "FAILED",
                 "code": 1,
                 "time": f"{step_duration:.2f}s"
             })
-            print(f"\n🛑 Pipeline Execution Halted due to exception in {agent_name}")
+            print(f"\n🛑 Pipeline Execution Halted cleanly due to failure in {agent_name} (Step {idx}/{total_steps})")
             sys.exit(1)
 
     total_pipeline_time = time.time() - overall_start_time
     print("\n" + "=" * 80)
-    print("🎉 FULL RECRUITMENT PIPELINE EXECUTION COMPLETED SUCCESSFULLY!")
+    print("🎉 IN-MEMORY RECRUITMENT PIPELINE EXECUTION COMPLETED SUCCESSFULLY!")
     print(f"⏱️ Total Execution Time: {total_pipeline_time:.2f} seconds")
     print("=" * 80)
     for item in summary_results:
-        print(f"  • {item['name']:<42} -> STATUS: {item['status']} (Exit Code {item['code']}, Time: {item['time']})")
+        print(f"  • {item['step']} {item['name']:<42} -> STATUS: {item['status']} ({item['time']})")
     print("=" * 80 + "\n")
 
 
@@ -215,7 +225,7 @@ def main():
                 f"Remarks: {job_data.get('remarks', '-')}\n"
             )
 
-    # Launch Central Sequential Pipeline Execution
+    # Launch In-Memory Direct Pipeline Execution
     run_orchestrated_pipeline(job_id)
 
 
