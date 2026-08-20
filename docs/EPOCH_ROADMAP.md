@@ -154,11 +154,13 @@ gantt
 - **Status**: ✅ **COMPLETED** (Pre-flight PDF Health Guard & `.quarantine/` Isolation Delivered)
 
 
-#### 🎯 Task 3.3: Vector Talent Search & Candidate Memory (Local Semantic Retrieval)
+#### 🎯 Task 3.3: Vector Talent Search & Candidate Memory (Local Semantic Retrieval) [COMPLETED]
 - **Problem**: ข้อมูลผู้สมัครในอดีต (Agent 10 Talent Dossiers) ไม่สามารถค้นหาเชิงความหมาย (Semantic Search) ได้
 - **Target Solution**:
   * สร้าง Local Vector Embeddings (ChromaDB / FAISS / Gemini Embeddings) สำหรับจัดเก็บ Talent Dossiers
   * เพิ่ม Semantic Search Interface ให้ HR ค้นหาผู้สมัครเก่าใน Talent Pool ตามทักษะ หรือโปรไฟล์ความตรงได้อย่างรวดเร็ว
+- **Status**: ✅ **COMPLETED** (`engine/talent_memory.py` Central Talent Store & Search Engine Delivered)
+
 
 #### 🎯 Task 3.4: Multi-Role Concurrent Orchestration
 - **Problem**: ปัจจุบัน Orchestrator รองรับการรันทีละ Job Ticket

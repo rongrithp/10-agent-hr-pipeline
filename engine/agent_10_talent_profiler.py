@@ -293,7 +293,16 @@ def main(job_id: str = None):
 
         print(f"✅ [Agent 10] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 10] บันทึกไฟล์ {md_output_path.name} (Formal Talent Dossier) ใน 05_onboarding_vault สำเร็จ")
+
+        # Auto-index into Central Talent Store (Task 3.3)
+        try:
+            from engine.talent_memory import build_talent_index
+            build_talent_index()
+        except Exception as idx_err:
+            print(f"⚠️ [Agent 10] Auto-indexing Talent Pool ล้มเหลว: {idx_err}")
+
         return talent_payload.model_dump()
+
 
     except Exception as e:
         print(f"❌ [Agent 10] ระบบสมองประมวลผลล้มเหลว: {e}")
