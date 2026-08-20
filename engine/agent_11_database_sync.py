@@ -396,11 +396,6 @@ def main():
 
         print(f"✅ [Agent 11] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 11] บันทึกไฟล์ {md_output_path.name} (Formal DB Audit Report) ใน 05_onboarding_vault สำเร็จ")
-        print("🚀 [Agent 11] เตรียมเตะปลุก Agent 12 แจ้งเตือน Telegram...")
-
-        # เตะปลุก Agent 12
-        next_agent = os.path.join(config.ENGINE_DIR, "agent_12_telegram_notify.py")
-        subprocess.Popen([sys.executable, next_agent, job_id])
 
     except Exception as e:
         print(f"❌ [Agent 11] ระบบสมองประมวลผลล้มเหลว: {e}")

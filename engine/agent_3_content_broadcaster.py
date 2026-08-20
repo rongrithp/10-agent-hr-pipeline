@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -219,7 +220,6 @@ def main():
 
         print(f"✅ [Agent 3] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 3] บันทึกไฟล์ {md_output_path.name} (Ready Copywriting Pack) สำเร็จ")
-        print(f"⏸️ [System] Phase 1 เสร็จสมบูรณ์! ระบบเข้าสู่โหมดรอรับเรซูเม่ (Transient Hypofrontality) สำหรับ {job_id}")
 
     except Exception as e:
         print(f"❌ [Agent 3] ระบบสมองประมวลผลล้มเหลว: {e}")

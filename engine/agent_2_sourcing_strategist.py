@@ -297,11 +297,6 @@ def main():
 
         print(f"✅ [Agent 2] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 2] บันทึกไฟล์ {md_output_path.name} (Formal Strategy Plan) สำเร็จ")
-        print("🚀 [Agent 2] เตรียมส่งไม้ผลัดปลุก Agent 3...")
-
-        # เตะปลุก Agent 3
-        next_agent = os.path.join(config.ENGINE_DIR, "agent_3_content_broadcaster.py")
-        subprocess.Popen([sys.executable, next_agent, job_id])
 
     except Exception as e:
         print(f"❌ [Agent 2] ระบบสมองประมวลผลล้มเหลว: {e}")

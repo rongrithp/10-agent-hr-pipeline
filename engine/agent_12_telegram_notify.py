@@ -125,8 +125,7 @@ def dispatch_to_telegram(message_text: str) -> dict:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         payload = {
             "chat_id": CHAT_ID,
-            "text": message_text,
-            "parse_mode": None
+            "text": message_text
         }
         resp = requests.post(url, json=payload, timeout=10)
 

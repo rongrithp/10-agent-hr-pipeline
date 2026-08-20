@@ -287,11 +287,6 @@ def main():
 
         print(f"✅ [Agent 10] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 05_onboarding_vault สำเร็จ")
         print(f"✅ [Agent 10] บันทึกไฟล์ {md_output_path.name} (Formal Talent Dossier) ใน 05_onboarding_vault สำเร็จ")
-        print("🚀 [Agent 10] เตรียมเตะปลุก Agent 11 ซิงค์ฐานข้อมูล Google Sheets...")
-
-        # เตะปลุก Agent 11
-        next_agent = os.path.join(config.ENGINE_DIR, "agent_11_database_sync.py")
-        subprocess.Popen([sys.executable, next_agent, job_id])
 
     except Exception as e:
         print(f"❌ [Agent 10] ระบบสมองประมวลผลล้มเหลว: {e}")

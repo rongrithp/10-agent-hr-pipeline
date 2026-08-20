@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import subprocess
 from typing import List
 from datetime import datetime
 from pathlib import Path
@@ -286,7 +287,6 @@ def main():
 
         print(f"✅ [Agent 5] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 5] บันทึกไฟล์ {md_output_path.name} (Formal Interview Guide) สำเร็จ")
-        print(f"⏸️ [System] หยุดรอ... รอผู้สัมภาษณ์ป้อน Notes ใน 02_sourcing_dropzone เพื่อปลุก Agent 6 ในรอบถัดไป")
 
     except Exception as e:
         print(f"❌ [Agent 5] ระบบสมองประมวลผลล้มเหลว: {e}")

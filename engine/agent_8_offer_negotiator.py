@@ -278,11 +278,6 @@ def main():
 
         print(f"✅ [Agent 8] บันทึกไฟล์ {json_output_path.name} (Structured Payload) ใน 04_offers_contracts สำเร็จ")
         print(f"✅ [Agent 8] บันทึกไฟล์ {md_output_path.name} (Formal Offer Letter) ใน 04_offers_contracts สำเร็จ")
-        print("🚀 [Agent 8] เตรียมเตะปลุก Agent 9 วางแผน Onboarding (Onboarding Planner)...")
-
-        # เตะปลุก Agent 9
-        next_agent = os.path.join(config.ENGINE_DIR, "agent_9_onboarding_planner.py")
-        subprocess.Popen([sys.executable, next_agent, job_id])
 
     except Exception as e:
         print(f"❌ [Agent 8] ระบบสมองประมวลผลล้มเหลว: {e}")

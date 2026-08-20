@@ -286,11 +286,6 @@ def main():
 
         print(f"✅ [Agent 6] บันทึกไฟล์ {json_output_path.name} (Structured Payload) สำเร็จ")
         print(f"✅ [Agent 6] บันทึกไฟล์ {md_output_path.name} (Formal Evaluation Report) สำเร็จ")
-        print("🚀 [Agent 6] เตรียมเตะปลุก Agent 7 ตรวจสอบประวัติ...")
-
-        # เตะปลุก Agent 7
-        next_agent = os.path.join(config.ENGINE_DIR, "agent_7_compliance_checker.py")
-        subprocess.Popen([sys.executable, next_agent, job_id])
 
     except Exception as e:
         print(f"❌ [Agent 6] ระบบสมองประมวลผลล้มเหลว: {e}")
