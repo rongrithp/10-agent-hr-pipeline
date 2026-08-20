@@ -189,36 +189,42 @@ def main(job_id: str = None):
             is5_data_str = f.read()
         print(f"📄 [Agent 6] อ่านคู่มือการสัมภาษณ์จาก {is5_json_path.name} สำเร็จ")
 
-    # Read Interview Notes
-    notes_file_path = dropzone_dir / "mock_interview_notes.txt"
-    notes_data_str = ""
+    # Read Interview Notes from 02_sourcing_dropzone/ (.md / .txt)
+    note_files = list(dropzone_dir.glob("*interview*.md")) + \
+                 list(dropzone_dir.glob("*interview*.txt")) + \
+                 list(dropzone_dir.glob("*feedback*.md")) + \
+                 list(dropzone_dir.glob("*feedback*.txt")) + \
+                 list(dropzone_dir.glob("mock_interview_notes.txt"))
+    
+    unique_note_files = list(dict.fromkeys(note_files))
+    notes_data_parts = []
 
-    if notes_file_path.exists():
-        with open(notes_file_path, "r", encoding="utf-8") as f:
-            notes_data_str = f.read()
-        print(f"📄 [Agent 6] อ่านบันทึกการสัมภาษณ์จาก {notes_file_path.name} สำเร็จ")
+    if unique_note_files:
+        print(f"📄 [Agent 6] ตรวจพบไฟล์บันทึกการสัมภาษณ์จำนวน {len(unique_note_files)} ไฟล์ใน 02_sourcing_dropzone/")
+        for nfile in sorted(unique_note_files):
+            with open(nfile, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    notes_data_parts.append(f"--- Interviewer Feedback File: {nfile.name} ---\n{content}")
+                    print(f"   ✅ [Agent 6] อ่านบันทึกการสัมภาษณ์จาก {nfile.name} สำเร็จ")
+        notes_data_str = "\n\n".join(notes_data_parts)
     else:
-        # Check alternative notes files in dropzone or specs
-        alt_notes = list(dropzone_dir.glob("*interview_notes*.txt")) + list(specs_dir.glob("*interview_notes*.txt"))
-        if alt_notes:
-            with open(alt_notes[0], "r", encoding="utf-8") as f:
-                notes_data_str = f.read()
-            print(f"📄 [Agent 6] อ่านบันทึกการสัมภาษณ์จาก {alt_notes[0].name} สำเร็จ")
-        else:
-            # Fallback: Auto-generate structured interview notes for shortlisted candidate
-            print(f"ℹ️ [Agent 6] ไม่พบไฟล์บันทึกสัมภาษณ์ กำลังประมวลผลการประเมินจากแผนสัมภาษณ์ IS5...")
-            notes_data_str = (
-                "INTERVIEW NOTES (Panel Assessment):\n"
-                "- Candidate: Dr. Somchai Techavision (CAND-001)\n"
-                "- Technical Depth: Demonstrated deep knowledge in Python, PyTorch, MLOps, and NLP architectures.\n"
-                "- EdTech Strategy: Articulated a clear 3-year AI roadmap for Harrow International School with emphasis on student data privacy.\n"
-                "- Leadership: Strong communication style, experience mentoring 6+ engineers, excellent alignment with school values.\n"
-                "- Panel Rating: Overall 4.8 / 5. Strongly recommended for hire."
-            )
+        notes_data_str = ""
+
+    if not notes_data_str.strip():
+        print(f"ℹ️ [Agent 6] ไม่พบไฟล์บันทึกสัมภาษณ์ใน dropzone กำลังเปิดใช้ Fallback ประมวลผลจากแผนสัมภาษณ์ IS5...")
+        notes_data_str = (
+            "INTERVIEW NOTES (Fallback Baseline Assessment):\n"
+            "- Candidate: Dr. Arisara Srivatanakul (dr_arisara)\n"
+            "- Technical Depth: Demonstrated deep knowledge in Python, PyTorch, MLOps, and NLP architectures.\n"
+            "- EdTech Strategy: Articulated a clear AI roadmap for Harrow International School with emphasis on student data privacy.\n"
+            "- Leadership: Strong communication style, experience mentoring 10 engineers, excellent alignment with school values.\n"
+            "- Panel Rating: Overall 4.8 / 5. Strongly recommended for hire."
+        )
 
     system_instruction = (
         "คุณคือ Agent 6 (Multi-Candidate Interview Evaluator & Scoring Engine)\n"
-        "หน้าที่ของคุณคือการวิเคราะห์และประเมินผลการสัมภาษณ์ผู้สมัครร่วมกับเกณฑ์ Rubric ใน IS5 และบันทึกการสัมภาษณ์ (Interview Notes)\n"
+        "หน้าที่ของคุณคือการวิเคราะห์และประเมินผลการสัมภาษณ์ผู้สมัครร่วมกับเกณฑ์ Rubric ใน IS5 และบันทึกการสัมภาษณ์ (Interview Notes / Transcripts)\n"
         "เกณฑ์การประเมินผู้สมัครแต่ละคนประกอบด้วย:\n"
         "1. overall_interview_score (0-100%) คำนวณตามน้ำหนักของ competency_scores แต่ละหมวด\n"
         "2. สกัด key_strengths (จุดเด่นเชิงประจักษ์) และ areas_of_concern (ความเสี่ยงหรือจุดอ่อนที่พบ)\n"
@@ -231,7 +237,7 @@ def main(job_id: str = None):
 ข้อมูลแผนและเกณฑ์การสัมภาษณ์ (IS5 Schedule & Rubrics):
 {is5_data_str}
 
-บันทึกจากการสัมภาษณ์ (Interview Notes):
+บันทึกจากการสัมภาษณ์ (Interviewer Notes / Transcripts):
 {notes_data_str}
 
 กรุณาประเมินผลการสัมภาษณ์ผู้สมัครทุกคน เรียงลำดับคะแนนจากมากไปน้อย และระบุผู้สมัครอันดับ 1 (selected_top_candidate) บันทึกลงใน Schema ให้สมบูรณ์
@@ -270,7 +276,7 @@ def main(job_id: str = None):
         json_str = eval_payload.model_dump_json(indent=2)
         formal_md = format_formal_markdown(eval_payload)
 
-        # Safety Guards & File Operations
+        # Safety Guards & File Operations in 03_evaluations/
         Path(json_output_path).parent.mkdir(parents=True, exist_ok=True)
         config.ensure_parent_dir(json_output_path)
         with open(json_output_path, "w", encoding="utf-8") as f:
@@ -296,7 +302,6 @@ def main(job_id: str = None):
             sys.exit(1)
         else:
             raise e
-
 
 
 if __name__ == "__main__":

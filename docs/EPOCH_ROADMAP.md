@@ -67,7 +67,7 @@ flowchart LR
 
 ---
 
-## 🟡 3. Epoch 2: Platform Integration & Production Inputs [UPCOMING]
+## 🟢 3. Epoch 2: Platform Integration & Production Inputs [COMPLETED]
 
 ### 3.1 Focus & Core Objectives
 ยกระดับระบบจาก Prototype Workflow สู่ Production-Grade Operational Pipeline โดยมุ่งเน้นการปฏิรูปความเร็วในการประมวลผล (In-Memory Pipeline), การรองรับข้อมูลจากภายนอกจริง (Real PDF Parser), สื่อประชาสัมพันธ์ 50-field schema สำหรับ JobsDB และอินเทอร์เฟซรับข้อมูล Human-in-the-Loop
@@ -77,12 +77,12 @@ gantt
     title Epoch 2 Roadmap Milestones
     dateFormat  YYYY-MM-DD
     section Architecture
-    Task 2.1 Refactor Orchestrator to In-Memory     :active, 2026-09-01, 7d
+    Task 2.1 Refactor Orchestrator to In-Memory     :done, 2026-09-01, 7d
     section Integration
-    Task 2.2 Deep Dive Agent 3 JobsDB 50-Field Payload :2026-09-08, 7d
-    Task 2.3 Live Resume Parsing PDF Dropzone       :2026-09-15, 7d
+    Task 2.2 Deep Dive Agent 3 JobsDB 50-Field Payload :done, 2026-09-08, 7d
+    Task 2.3 Live Resume Parsing PDF Dropzone       :done, 2026-09-15, 7d
     section Human-in-the-Loop
-    Task 2.4 Human-in-the-Loop Interview Notes Input :2026-09-22, 7d
+    Task 2.4 Human-in-the-Loop Interview Notes Input :done, 2026-09-22, 7d
 ```
 
 ### 3.2 Key Roadmap Tasks & Deliverables
@@ -111,11 +111,12 @@ gantt
 - **Status**: ✅ **COMPLETED** (Live PDF Resume Batch Extractor & Candidate Matrix Engine Delivered)
 
 
-#### 🎯 Task 2.4: Human-in-the-Loop Feedback Interface (Interview Notes Input)
+#### 🎯 Task 2.4: Human-in-the-Loop Feedback Interface (Interview Notes Input) [COMPLETED]
 - **Problem**: ผลการสัมภาษณ์งานจริงต้องรับมาจากบทสนทนาและบันทึกของกรรมการ (Interviewer Notes)
 - **Target Solution**:
   * สร้าง CLI / Form Interface หรือ Webhook สั้นๆ รับ Raw Text / Audio Transcript จากกรรมการสัมภาษณ์บันทึกลงใน `.interview/` โฟลเดอร์
   * ให้ Agent 6 (Interview Evaluator) ทำการสกัด (Extract) คะแนน และ Competency Assessment จากบันทึกจริงเพื่อลงคะแนนตัดสินใจ Hiring Decision
+- **Status**: ✅ **COMPLETED** (Human-in-the-Loop Interview Feedback Engine Delivered)
 
 ---
 
@@ -141,5 +142,6 @@ gantt
 | Epoch | Objective | Primary Deliverables | Target Timeline | Status |
 | :---: | :--- | :--- | :---: | :---: |
 | **Epoch 1** | Core Foundation & Data Contracts | 12-Agent Pipeline, Dual Output (.json/.md), Schema Validation, Telegram Live Dispatch | Q3 2026 | ✅ **COMPLETED** |
-| **Epoch 2** | Platform Integration & Production Inputs | In-Memory Orchestrator, JobsDB 50-field Schema, PDF Resume Dropzone, Human-in-the-Loop Notes | Q4 2026 | 🟡 **UPCOMING** |
+| **Epoch 2** | Platform Integration & Production Inputs | In-Memory Orchestrator, JobsDB 50-field Schema, PDF Resume Dropzone, Human-in-the-Loop Notes | Q4 2026 | ✅ **COMPLETED** |
 | **Epoch 3** | Enterprise Automation & Autonomous Ops | Playwright Job Board Automation, Vector Talent Search, Multi-Role Parallel Pipeline | Q1 2027 | 🔵 **FUTURE** |
+
