@@ -2,7 +2,10 @@ import os
 import sys
 import json
 import time
+import argparse
+import threading
 import gspread
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 from pathlib import Path
@@ -35,11 +38,18 @@ SPREADSHEET_ID = '13f5p_vrtjihGeWms1UvE9oJcvnlUl3Ous4-kSeifsrw'
 CREDENTIALS_FILE = str(config.GCP_CREDENTIALS_PATH)
 TARGET_SHEET_NAME = 'Job_Tracker'
 
+print_lock = threading.Lock()
+
+def safe_print(*args, **kwargs):
+    """Thread-safe console print helper"""
+    with print_lock:
+        print(*args, **kwargs)
+
 
 def sync_job_tracker(data: dict):
-    """บันทึกหรืออัปเดตใบงานลงในแท็บ Job_Tracker ตามลำดับคอลัมน์ A ถึง N"""
+    """บันทึกหรืออัปเดตใบงานลงในแท็บ Job_Tracker ตามลำดับคอลัมน์ A ถึง N (Thread-Safe)"""
     if not os.path.exists(CREDENTIALS_FILE):
-        print(f"⚠️ [Orchestrator] ไม่พบไฟล์กุญแจ GCP Credentials: {CREDENTIALS_FILE}")
+        safe_print(f"⚠️ [Orchestrator] ไม่พบไฟล์กุญแจ GCP Credentials: {CREDENTIALS_FILE}")
         return
 
     try:
@@ -54,7 +64,6 @@ def sync_job_tracker(data: dict):
         try:
             sheet = spreadsheet.worksheet(TARGET_SHEET_NAME)
         except gspread.exceptions.WorksheetNotFound:
-            print(f"⚠️ [Orchestrator] ไม่พบชีท '{TARGET_SHEET_NAME}' กำลังสร้างชีทใหม่ให้อัตโนมัติ...")
             sheet = spreadsheet.add_worksheet(title=TARGET_SHEET_NAME, rows="100", cols="20")
 
         headers = [
@@ -72,10 +81,10 @@ def sync_job_tracker(data: dict):
         job_id = data.get("job_id", "")
         open_date = data.get("open_date", data.get("date", datetime.now().strftime("%Y-%m-%d")))
         client_name = data.get("client", data.get("client_name", ""))
-        contact_info = data.get("contact_info", data.get("requester", ""))
+        contact_info = data.get("contact_info", data.get("contact", data.get("requester", "")))
         position = data.get("position", "")
         headcount = data.get("headcount", 1)
-        salary_budget = data.get("budget", data.get("salary_budget", ""))
+        salary_budget = data.get("salary_budget", data.get("budget", ""))
         target_start_date = data.get("target_start_date", data.get("timeline", ""))
         current_stage = data.get("current_stage", data.get("status", "OPEN"))
         placed_candidate = data.get("placed_candidate", "")
@@ -106,21 +115,21 @@ def sync_job_tracker(data: dict):
         if found_row_idx:
             range_to_update = f"A{found_row_idx}:N{found_row_idx}"
             sheet.update(range_to_update, [row_data])
-            print(f"✅ [Orchestrator] อัปเดตข้อมูลใบงาน {job_id} ในแท็บ '{TARGET_SHEET_NAME}' แถวที่ {found_row_idx} สำเร็จ")
+            safe_print(f"✅ [Orchestrator:{job_id}] อัปเดตข้อมูลใบงานในแท็บ '{TARGET_SHEET_NAME}' แถวที่ {found_row_idx} สำเร็จ")
         else:
             sheet.append_row(row_data)
-            print(f"✅ [Orchestrator] บันทึกใบงานใหม่ {job_id} ลงแท็บ '{TARGET_SHEET_NAME}' สำเร็จ")
+            safe_print(f"✅ [Orchestrator:{job_id}] บันทึกใบงานใหม่ลงแท็บ '{TARGET_SHEET_NAME}' สำเร็จ")
 
     except Exception as e:
-        print(f"❌ [Orchestrator] เกิดข้อผิดพลาดในการบันทึก Google Sheets: {e}")
+        safe_print(f"❌ [Orchestrator:{data.get('job_id')}] เกิดข้อผิดพลาดในการบันทึก Google Sheets: {e}")
 
 
-def run_orchestrated_pipeline(job_id: str):
+def run_orchestrated_pipeline(job_id: str) -> bool:
     """ทำหน้าที่เป็น Central State Engine ควบคุมการรัน In-Memory Pipeline ครบถ้วน 13 Agents Across 5 Lifecycles"""
-    print("\n" + "=" * 80)
-    print(f"🛸 CENTRAL IN-MEMORY PIPELINE ENGINE FOR WORKSPACE: {job_id}")
-    print(f"⏰ Execution Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 80 + "\n")
+    safe_print("\n" + "=" * 80)
+    safe_print(f"🛸 CENTRAL IN-MEMORY PIPELINE ENGINE FOR WORKSPACE: {job_id}")
+    safe_print(f"⏰ Execution Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    safe_print("=" * 80 + "\n")
 
     pipeline_stages = [
         # Lifecycle 1: Job Specs & Sourcing Assets
@@ -149,7 +158,7 @@ def run_orchestrated_pipeline(job_id: str):
 
     for idx, (lifecycle_name, agent_name, agent_func) in enumerate(pipeline_stages, start=1):
         step_str = f"[{idx}/{total_steps}]"
-        print(f"\n▶️ {step_str} [{lifecycle_name}] Running {agent_name} (In-Memory)...")
+        safe_print(f"\n▶️ {step_str} [{job_id}] [{lifecycle_name}] Running {agent_name} (In-Memory)...")
 
         step_start = time.time()
         try:
@@ -159,7 +168,7 @@ def run_orchestrated_pipeline(job_id: str):
 
             pipeline_state[agent_name] = result_payload
 
-            print(f"   ✅ {step_str} {agent_name} COMPLETED (In-Memory Execution, Time: {step_duration:.2f}s)")
+            safe_print(f"   ✅ {step_str} [{job_id}] {agent_name} COMPLETED (In-Memory Execution, Time: {step_duration:.2f}s)")
             summary_results.append({
                 "step": step_str,
                 "lifecycle": lifecycle_name,
@@ -171,7 +180,7 @@ def run_orchestrated_pipeline(job_id: str):
 
         except Exception as err:
             step_duration = time.time() - step_start
-            print(f"   ❌ {step_str} {agent_name} FAILED / EXCEPTION: {err}")
+            safe_print(f"   ❌ {step_str} [{job_id}] {agent_name} FAILED / EXCEPTION: {err}")
             summary_results.append({
                 "step": step_str,
                 "lifecycle": lifecycle_name,
@@ -180,26 +189,36 @@ def run_orchestrated_pipeline(job_id: str):
                 "code": 1,
                 "time": f"{step_duration:.2f}s"
             })
-            print(f"\n🛑 Pipeline Execution Halted cleanly due to failure in {agent_name} (Step {idx}/{total_steps})")
-            sys.exit(1)
+            safe_print(f"\n🛑 Pipeline Execution Halted for {job_id} due to failure in {agent_name} (Step {idx}/{total_steps})")
+            return False
 
     total_pipeline_time = time.time() - overall_start_time
-    print("\n" + "=" * 80)
-    print("🎉 IN-MEMORY RECRUITMENT PIPELINE EXECUTION COMPLETED SUCCESSFULLY!")
-    print(f"⏱️ Total Execution Time: {total_pipeline_time:.2f} seconds")
-    print("=" * 80)
+    safe_print("\n" + "=" * 80)
+    safe_print(f"🎉 IN-MEMORY RECRUITMENT PIPELINE FOR {job_id} COMPLETED SUCCESSFULLY!")
+    safe_print(f"⏱️ Total Execution Time: {total_pipeline_time:.2f} seconds")
+    safe_print("=" * 80)
     for item in summary_results:
-        print(f"  • {item['step']} {item['name']:<42} -> STATUS: {item['status']} ({item['time']})")
-    print("=" * 80 + "\n")
+        safe_print(f"  • [{job_id}] {item['step']} {item['name']:<42} -> STATUS: {item['status']} ({item['time']})")
+    safe_print("=" * 80 + "\n")
+    return True
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("❌ [Orchestrator] ขัดข้อง: ไม่ได้รับ Job ID")
-        sys.exit(1)
+def discover_job_workspaces() -> list[str]:
+    """สแกนหาโฟลเดอร์ใบงานทั้งหมดใน workspaces/ ที่มีไฟล์ is0_job_ticket.json"""
+    workspaces_dir = Path(root_dir) / "workspaces"
+    job_ids = []
+    if workspaces_dir.exists():
+        for folder in sorted(workspaces_dir.iterdir()):
+            if folder.is_dir():
+                ticket_path = folder / "01_specs" / "is0_job_ticket.json"
+                if ticket_path.exists():
+                    job_ids.append(folder.name)
+    return job_ids
 
-    job_id = sys.argv[1].strip()
-    print(f"🛸 [Orchestrator] รับไม้ผลัด Job: {job_id} กำลังเข้าสู่ Workspace...")
+
+def process_single_job(job_id: str) -> bool:
+    """ประมวลผลทั้ง 13 Agents สำหรับ Job Ticket เดียวผ่าน In-Memory Pipeline"""
+    safe_print(f"🛸 [Orchestrator Thread] รับไม้ผลัด Job: {job_id} กำลังเข้าสู่ Workspace...")
 
     paths = config.get_workspace(job_id)
     payload_path = os.path.join(paths["specs"], 'is0_job_ticket.json')
@@ -218,15 +237,63 @@ def main():
                 f"Job ID: {job_data.get('job_id')}\n"
                 f"Position: {job_data.get('position')}\n"
                 f"Client: {job_data.get('client')}\n"
-                f"Contact Info: {job_data.get('contact_info', job_data.get('requester', '-'))}\n"
+                f"Contact Info: {job_data.get('contact_info', job_data.get('contact', '-'))}\n"
                 f"Headcount: {job_data.get('headcount', 1)}\n"
-                f"Budget: {job_data.get('budget')}\n"
+                f"Budget: {job_data.get('salary_budget', job_data.get('budget'))}\n"
                 f"Timeline/Target Start: {job_data.get('target_start_date', job_data.get('timeline'))}\n"
                 f"Remarks: {job_data.get('remarks', '-')}\n"
             )
 
-    # Launch In-Memory Direct Pipeline Execution
-    run_orchestrated_pipeline(job_id)
+    return run_orchestrated_pipeline(job_id)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Multi-Role Concurrent Recruitment Orchestrator Engine")
+    parser.add_argument("jobs", nargs="*", help="รายชื่อ Job IDs ที่ต้องการประมวลผลพร้อมกัน (เช่น JOB-VERIFY-2026 JOB-DATA-2026)")
+    parser.add_argument("--all", action="store_true", help="สแกนประมวลผลทุก Job Ticket ใน workspaces/")
+    parser.add_argument("--workers", type=int, default=3, help="จำนวน Threads สูงสุดสำหรับ Concurrent Execution (default: 3)")
+    args = parser.parse_args()
+
+    job_ids = args.jobs
+
+    if args.all:
+        job_ids = discover_job_workspaces()
+        print(f"🔍 [Orchestrator] ตรวจพบ {len(job_ids)} Workspaces จากการสแกน --all: {job_ids}")
+
+    if not job_ids:
+        print("❌ [Orchestrator] ขัดข้อง: ไม่พบ Job ID สำหรับประมวลผล (กรุณาระบุ Job ID หรือใช้ --all)")
+        sys.exit(1)
+
+    if len(job_ids) == 1:
+        # Run single job synchronously
+        success = process_single_job(job_ids[0])
+        if not success:
+            sys.exit(1)
+    else:
+        print(f"🚀 [Multi-Role Orchestrator] เริ่มประมวลผลแบบ Concurrent สำหรับ {len(job_ids)} ตำแหน่งงานพร้อมกัน (Workers: {args.workers})")
+        print("=" * 80)
+        
+        start_time = time.time()
+        results = {}
+        
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            future_to_job = {executor.submit(process_single_job, jid): jid for jid in job_ids}
+            for future in as_completed(future_to_job):
+                jid = future_to_job[future]
+                try:
+                    success = future.result()
+                    results[jid] = "PASSED" if success else "FAILED"
+                except Exception as exc:
+                    results[jid] = f"FAILED ({exc})"
+
+        total_time = time.time() - start_time
+        print("\n" + "=" * 80)
+        print("🎉 MULTI-ROLE CONCURRENT ORCHESTRATION COMPLETED!")
+        print(f"⏱️ Total Execution Time: {total_time:.2f} seconds")
+        print("=" * 80)
+        for jid, status in results.items():
+            print(f"  • Workspace: {jid:<25} ➔ Status: {status}")
+        print("=" * 80 + "\n")
 
 
 if __name__ == '__main__':
