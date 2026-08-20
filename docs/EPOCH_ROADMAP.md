@@ -170,6 +170,30 @@ gantt
 
 ---
 
+## 🟢 5. Epoch 4: Production Polish & UI [IN PROGRESS]
+
+### 5.1 Overview & Operational Objectives
+ยกระดับประสบการณ์ผู้ใช้งานสำหรับผู้บริหารและทีม HR ด้วย Web Operations Dashboard ผ่าน Streamlit รวมศูนย์การติดตามสถานะ 12-Agent Pipeline แบบเรียลไทม์ การส่องลึกระดับโฟลเดอร์ Workspace artifacts (IS0-IS12) และระบบค้นหาแคนดิเดตข้ามตำแหน่งงานผ่าน Central Talent Memory Store
+
+### 5.2 Key Roadmap Tasks & Deliverables
+
+#### 🎯 Task 4.1: Central Recruitment Operations Dashboard (`dashboard.py`) [COMPLETED]
+- **Problem**: ผู้บริหารและ HR ต้องการ Web UI สำหรับติดตามและตรวจทาน Output Artifacts ทั้งหมดของทั้ง 12 Agents โดยไม่ต้องอ่านไฟล์ Markdown/JSON ด้วยตนเองในดิสก์
+- **Target Solution**:
+  * พัฒนา `dashboard.py` ใน Root Directory ด้วย `streamlit`
+  * แสดงผล 4 สกอร์การ์ดหลัก: Header KPIs (Active Jobs, Candidates Screened, Offers & Onboarded, Pipeline Progress %)
+  * **Job Pipeline Overview**: แสดงรายชื่อตำแหน่งงาน สกอร์การ์ด Progress Stage 1-13 พร้อม Status Badge
+  * **Deep-Dive Job Inspector**: Dropdown ตำแหน่งงาน แสดงผลแยก 4 แท็บ:
+    - 📋 *Job Specs & Strategy* (IS1 Formal JD, IS2 Sourcing Strategy)
+    - 📢 *Broadcasting Kits* (IS3 Copywriting Kits Preview)
+    - 🎯 *Candidate Matrix & Evaluation* (IS4 Screening Matrix, IS6 Interview Evaluation)
+    - 🤝 *Offer & Onboarding Vault* (IS8 Offer Letter, IS9 Onboarding Plan, IS10 Talent Dossier)
+  * **Talent Pool Memory Search**: ช่องค้นหาประวัติผู้สมัครตามทักษะ/ตำแหน่ง ดึงผลลัพธ์จาก `engine.talent_memory`
+  * ปุ่ม Refresh Data สำหรับการโหลดข้อมูลดิสก์ล่าสุด
+- **Status**: ✅ **COMPLETED** (`dashboard.py` Central Recruitment Operations Dashboard Delivered)
+
+---
+
 ## 📅 Roadmap Execution Summary Matrix
 
 | Epoch | Objective | Primary Deliverables | Target Timeline | Status |
@@ -177,6 +201,8 @@ gantt
 | **Epoch 1** | Core Foundation & Data Contracts | 12-Agent Pipeline, Dual Output (.json/.md), Schema Validation, Telegram Live Dispatch | Q3 2026 | ✅ **COMPLETED** |
 | **Epoch 2** | Platform Integration & Production Inputs | In-Memory Orchestrator, JobsDB 50-field Schema, PDF Resume Dropzone, Human-in-the-Loop Notes | Q4 2026 | ✅ **COMPLETED** |
 | **Epoch 3** | Enterprise Hardening & Operational Resilience | API Backoff Retries, PDF Quarantine Guard, Vector Talent Search, Multi-Role Parallel Pipeline | Q1 2027 | ✅ **COMPLETED** |
+| **Epoch 4** | Production Polish & UI | Central Recruitment Operations Dashboard (Streamlit), Multi-tab Workspace Inspector, Talent Search UI | Q2 2027 | 🟡 **IN PROGRESS** |
+
 
 
 
