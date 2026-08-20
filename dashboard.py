@@ -21,7 +21,7 @@ except ImportError:
 
 # Page Config
 st.set_page_config(
-    page_title="Central Recruitment Operations Dashboard",
+    page_title="ศูนย์ควบคุมระบบสรรหาบุคลากร (Central Recruitment Operations Dashboard)",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -30,10 +30,10 @@ st.set_page_config(
 # Custom CSS Theme
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Sarabun', 'Plus Jakarta Sans', sans-serif;
     }
     
     .stApp {
@@ -74,11 +74,10 @@ st.markdown("""
     }
     
     .kpi-label {
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         color: #94a3b8;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.03em;
     }
     
     .status-badge-completed {
@@ -196,13 +195,13 @@ def scan_workspace_job(job_folder: Path) -> dict:
     progress_pct = min(100, int((completed_count / 13) * 100))
     
     if completed_count >= 12:
-        status_label = "COMPLETED"
+        status_label = "เสร็จสมบูรณ์ 🟢"
         status_class = "status-badge-completed"
     elif completed_count > 0:
-        status_label = "IN PROGRESS"
+        status_label = "กำลังดำเนินการ 🟡"
         status_class = "status-badge-progress"
     else:
-        status_label = "PENDING"
+        status_label = "รอการประมวลผล ⚪"
         status_class = "status-badge-pending"
         
     # Screening Candidates Count
@@ -221,7 +220,7 @@ def scan_workspace_job(job_folder: Path) -> dict:
         "job_id": job_id,
         "folder_path": job_folder,
         "position": ticket_data.get("position", ticket_data.get("job_title", job_id)),
-        "department": ticket_data.get("department", "General"),
+        "department": ticket_data.get("department", "ทั่วไป"),
         "client": ticket_data.get("client", "Harrow International School"),
         "hiring_manager": ticket_data.get("hiring_manager", "N/A"),
         "salary_budget": ticket_data.get("salary_budget", "N/A"),
@@ -251,25 +250,25 @@ def load_all_workspaces() -> list:
 def main():
     # Sidebar
     st.sidebar.image("https://img.icons8.com/isometric/100/workspace.png", width=70)
-    st.sidebar.title("Recruitment Hub")
+    st.sidebar.title("ศูนย์ควบคุมระบบสรรหาบุคลากร (Recruitment Hub)")
     st.sidebar.markdown("---")
     
     # Global Refresh Action
-    if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
+    if st.sidebar.button("🔄 รีเฟรชข้อมูลล่าสุด", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
-    st.sidebar.markdown("### 📌 Navigation")
-    menu = st.sidebar.radio("Go to section:", [
-        "📊 Executive Overview",
-        "🔍 Job Pipeline Inspector",
-        "🧠 Talent Pool Search",
-        "⚙️ Engine Status"
+    st.sidebar.markdown("### 📌 เมนูหลัก (Navigation)")
+    menu = st.sidebar.radio("เลือกหน้าต่างทำงาน:", [
+        "📊 ภาพรวมสำหรับผู้บริหาร",
+        "🔍 ตรวจสอบขั้นตอนการสรรหาเชิงลึก",
+        "🧠 คลังประวัติผู้สมัครอัจฉริยะ (Talent Pool)",
+        "⚙️ สถานะการทำงานของเอเจนต์ (Engine Status)"
     ])
     
     st.sidebar.markdown("---")
-    st.sidebar.caption("⚡ 12-Agent System v1.0.0")
-    st.sidebar.caption(f"Last sync: {datetime.now().strftime('%H:%M:%S')}")
+    st.sidebar.caption("⚡ ระบบปฏิบัติการ 12-Agent v1.0.0")
+    st.sidebar.caption(f"ซิงค์ล่าสุด: {datetime.now().strftime('%H:%M:%S')}")
 
     # Scan Workspace Data
     jobs = load_all_workspaces()
@@ -280,9 +279,9 @@ def main():
     # Top Banner Header
     st.markdown("""
     <div class="main-header">
-        <h1 style="margin:0; font-size: 2.2rem; font-weight:800;">⚡ Central Recruitment Operations Dashboard</h1>
+        <h1 style="margin:0; font-size: 2.2rem; font-weight:800;">⚡ ศูนย์ควบคุมระบบสรรหาบุคลากร (Central Recruitment Operations Dashboard)</h1>
         <p style="color:#94a3b8; margin-top:6px; font-size:1rem;">
-            Real-time Monitoring & Inspection Interface for 12-Agent Multi-Agent Recruitment Pipeline
+            ระบบติดตาม ตรวจสอบ และวิเคราะห์ผลการทำงานของ 12-Agent Multi-Agent Recruitment Pipeline แบบเรียลไทม์
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -294,7 +293,7 @@ def main():
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-value">{total_jobs}</div>
-            <div class="kpi-label">Active Job Positions</div>
+            <div class="kpi-label">ตำแหน่งงานที่กำลังเปิดรับ</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -302,7 +301,7 @@ def main():
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-value">{total_screened}</div>
-            <div class="kpi-label">Candidates Screened</div>
+            <div class="kpi-label">ประวัติผู้สมัครที่คัดกรองแล้ว</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -310,7 +309,7 @@ def main():
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-value">{total_hired}</div>
-            <div class="kpi-label">Offers & Onboarded</div>
+            <div class="kpi-label">ยื่นข้อเสนอจ้างงานสำเร็จ</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -319,18 +318,18 @@ def main():
         st.markdown(f"""
         <div class="kpi-card">
             <div class="kpi-value">{avg_progress}%</div>
-            <div class="kpi-label">Pipeline Completion</div>
+            <div class="kpi-label">ความคืบหน้าภาพรวมของระบบ</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # --- SECTION 1: Executive Overview ---
-    if menu == "📊 Executive Overview":
-        st.subheader("📋 Job Pipeline Overview")
+    if menu == "📊 ภาพรวมสำหรับผู้บริหาร":
+        st.subheader("📋 ภาพรวมตำแหน่งงานและสถานะ Pipeline")
         
         if not jobs:
-            st.warning("⚠️ No job workspaces found in `workspaces/`.")
+            st.warning("⚠️ ไม่พบโฟลเดอร์ตำแหน่งงานในระบบ (`workspaces/`)")
             return
 
         # Overview Table / Cards
@@ -348,10 +347,10 @@ def main():
                         </div>
                     </div>
                     <div style="margin-top:10px; color:#cbd5e1; font-size:0.9rem;">
-                        📍 <b>Dept:</b> {j['department']} &nbsp;|&nbsp; 
-                        👥 <b>Headcount:</b> {j['headcount']} &nbsp;|&nbsp; 
-                        💰 <b>Budget:</b> {j['salary_budget']} &nbsp;|&nbsp; 
-                        🎯 <b>Screened:</b> {j['screened_count']} Candidates
+                        📍 <b>แผนก:</b> {j['department']} &nbsp;|&nbsp; 
+                        👥 <b>จำนวนรับ:</b> {j['headcount']} อัตรา &nbsp;|&nbsp; 
+                        💰 <b>งบประมาณ:</b> {j['salary_budget']} &nbsp;|&nbsp; 
+                        🎯 <b>คัดกรองแล้ว:</b> {j['screened_count']} ราย
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -359,20 +358,20 @@ def main():
                 # Progress Bar
                 c_lbl, c_bar = st.columns([1, 4])
                 with c_lbl:
-                    st.caption(f"Stage Progress: {j['completed_count']}/13 ({j['progress_pct']}%)")
+                    st.caption(f"ความคืบหน้าขั้นตอน: {j['completed_count']}/13 ({j['progress_pct']}%)")
                 with c_bar:
                     st.progress(j['progress_pct'] / 100)
 
     # --- SECTION 2: Deep-Dive Job Inspector ---
-    elif menu == "🔍 Job Pipeline Inspector":
-        st.subheader("🔍 Deep-Dive Job Inspector")
+    elif menu == "🔍 ตรวจสอบขั้นตอนการสรรหาเชิงลึก":
+        st.subheader("🔍 ตรวจสอบขั้นตอนการสรรหาเชิงลึก (Job Pipeline Inspector)")
         
         job_options = {f"{j['job_id']} - {j['position']}": j for j in jobs}
         if not job_options:
-            st.warning("No jobs found.")
+            st.warning("ไม่พบข้อมูลตำแหน่งงานในระบบ")
             return
 
-        selected_option = st.selectbox("Select Job Position to Inspect:", list(job_options.keys()))
+        selected_option = st.selectbox("เลือกตำแหน่งงานที่ต้องการตรวจสอบ:", list(job_options.keys()))
         selected_job = job_options[selected_option]
         job_dir = selected_job["folder_path"]
         
@@ -380,19 +379,19 @@ def main():
         
         # 4 Main Deep-Dive Tabs
         tab1, tab2, tab3, tab4 = st.tabs([
-            "📋 Job Specs & Strategy",
-            "📢 Broadcasting Kits",
-            "🎯 Candidate Matrix & Evaluation",
-            "🤝 Offer & Onboarding Vault"
+            "📋 รายละเอียดงานและกลยุทธ์ (Job Specs)",
+            "📢 สื่อประชาสัมพันธ์รับสมัครงาน (Broadcasting Kits)",
+            "🎯 ตารางตัดเกรดและผลสัมภาษณ์ (Evaluation Matrix)",
+            "🤝 สัญญาจ้างและแผนเริ่มงาน (Offer & Onboarding)"
         ])
         
         # TAB 1: Job Specs & Strategy (IS1, IS2)
         with tab1:
-            st.markdown("### 📋 IS1 & IS2: Job Description & Sourcing Strategy")
+            st.markdown("### 📋 IS1 & IS2: ข้อกำหนดตำแหน่งงานและยุทธศาสตร์การสรรหา")
             
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown("#### 📄 Job Description Document (IS1)")
+                st.markdown("#### 📄 เอกสารรายละเอียดงานอย่างเป็นทางการ (IS1)")
                 is1_md = load_markdown_file(job_dir / "01_specs" / "is1_job_description_formal.md")
                 if is1_md:
                     st.markdown(is1_md)
@@ -401,10 +400,10 @@ def main():
                     if is1_json:
                         st.json(is1_json)
                     else:
-                        st.info("No IS1 document generated yet.")
+                        st.info("ยังไม่ได้สร้างเอกสาร IS1")
                         
             with c2:
-                st.markdown("#### 🎯 Sourcing Strategy Document (IS2)")
+                st.markdown("#### 🎯 เอกสารยุทธศาสตร์การสรรหา (IS2)")
                 is2_md = load_markdown_file(job_dir / "01_specs" / "is2_sourcing_strategy_formal.md")
                 if is2_md:
                     st.markdown(is2_md)
@@ -413,11 +412,11 @@ def main():
                     if is2_json:
                         st.json(is2_json)
                     else:
-                        st.info("No IS2 document generated yet.")
+                        st.info("ยังไม่ได้สร้างเอกสาร IS2")
 
         # TAB 2: Broadcasting Kits (IS3)
         with tab2:
-            st.markdown("### 📢 IS3: Multi-Channel Broadcasting Content Kits")
+            st.markdown("### 📢 IS3: สื่อและชุดเนื้อหาประชาสัมพันธ์หลายช่องทาง")
             is3_md = load_markdown_file(job_dir / "01_specs" / "is3_broadcasting_content_kit.md")
             if not is3_md:
                 is3_md = load_markdown_file(job_dir / "03_broadcasting_kits" / "is3_broadcasting_content_kit.md")
@@ -429,15 +428,15 @@ def main():
                 if is3_json:
                     st.json(is3_json)
                 else:
-                    st.info("No IS3 broadcasting kit generated yet.")
+                    st.info("ยังไม่ได้สร้างชุดสื่อประชาสัมพันธ์ IS3")
 
         # TAB 3: Candidate Matrix & Evaluation (IS4, IS6)
         with tab3:
-            st.markdown("### 🎯 IS4 & IS6: Resume Screening & Interview Scorecards")
+            st.markdown("### 🎯 IS4 & IS6: ตารางคัดกรองเรซูเม่และรายงานผลสัมภาษณ์")
             
             e1, e2 = st.columns(2)
             with e1:
-                st.markdown("#### 📊 Resume Screening Scorecard (IS4)")
+                st.markdown("#### 📊 ตารางคะแนนการคัดกรองเรซูเม่ (IS4 Scorecard)")
                 is4_md = load_markdown_file(job_dir / "03_evaluations" / "is4_screening_matrix_formal.md")
                 if is4_md:
                     st.markdown(is4_md)
@@ -446,10 +445,10 @@ def main():
                     if is4_json:
                         st.json(is4_json)
                     else:
-                        st.info("No IS4 screening matrix generated yet.")
+                        st.info("ยังไม่ได้สร้างตารางคัดกรอง IS4")
                         
             with e2:
-                st.markdown("#### 🎙️ Interview Evaluation Report (IS6)")
+                st.markdown("#### 🎙️ รายงานการประมวลผลการสัมภาษณ์ (IS6 Evaluation)")
                 is6_md = load_markdown_file(job_dir / "03_evaluations" / "is6_interview_evaluation_report_formal.md")
                 if is6_md:
                     st.markdown(is6_md)
@@ -458,60 +457,60 @@ def main():
                     if is6_json:
                         st.json(is6_json)
                     else:
-                        st.info("No IS6 evaluation report generated yet.")
+                        st.info("ยังไม่ได้สร้างรายงานผลสัมภาษณ์ IS6")
 
         # TAB 4: Offer & Onboarding Vault (IS8, IS9, IS10)
         with tab4:
-            st.markdown("### 🤝 IS8, IS9 & IS10: Offer, Onboarding & Talent Dossier")
+            st.markdown("### 🤝 IS8, IS9 & IS10: สัญญาจ้าง แผนปฐมนิเทศ และประวัติพนักงาน")
             
             o1, o2, o3 = st.columns(3)
             with o1:
-                st.markdown("#### 📜 Offer Letter (IS8)")
+                st.markdown("#### 📜 ร่างหนังสือยื่นข้อเสนอจ้างงาน (IS8 Offer Letter)")
                 is8_md = load_markdown_file(job_dir / "04_offers_contracts" / "is8_formal_job_offer_letter.md")
                 if is8_md:
                     st.markdown(is8_md)
                 else:
-                    st.info("No IS8 Offer Letter found.")
+                    st.info("ไม่พบเอกสาร Offer Letter IS8")
                     
             with o2:
-                st.markdown("#### 🗺️ Onboarding Plan (IS9)")
+                st.markdown("#### 🗺️ แผนการปฐมนิเทศพนักงานใหม่ (IS9 Onboarding Plan)")
                 is9_md = load_markdown_file(job_dir / "05_onboarding_vault" / "is9_onboarding_roadmap_formal.md")
                 if is9_md:
                     st.markdown(is9_md)
                 else:
-                    st.info("No IS9 Onboarding Plan found.")
+                    st.info("ไม่พบแผนการปฐมนิเทศ IS9")
                     
             with o3:
-                st.markdown("#### 👤 Employee Dossier (IS10)")
+                st.markdown("#### 👤 แฟ้มประวัติพนักงานและสมรรถนะ (IS10 Employee Dossier)")
                 is10_md = load_markdown_file(job_dir / "05_onboarding_vault" / "is10_talent_dossier_formal.md")
                 if is10_md:
                     st.markdown(is10_md)
                 else:
-                    st.info("No IS10 Talent Dossier found.")
+                    st.info("ไม่พบแฟ้มประวัติ IS10")
 
     # --- SECTION 3: Talent Pool Memory Search ---
-    elif menu == "🧠 Talent Pool Search":
-        st.subheader("🧠 Central Talent Pool Memory Search")
-        st.markdown("Search across all past candidate dossiers using skill keywords, job titles, or experience.")
+    elif menu == "🧠 คลังประวัติผู้สมัครอัจฉริยะ (Talent Pool)":
+        st.subheader("🧠 คลังประวัติผู้สมัครอัจฉริยะ (Talent Pool Memory Search)")
+        st.markdown("สืบค้นประวัติและสมรรถนะของผู้สมัครข้ามทุกตำแหน่งงานในอดีตด้วยคำค้นหา ทักษะ หรือตำแหน่งงาน")
         
         c_btn1, c_btn2 = st.columns([4, 1])
         with c_btn2:
-            if st.button("⚡ Re-index Store", use_container_width=True):
+            if st.button("⚡ สแกนและอัปเดตดรรชนี (Re-index)", use_container_width=True):
                 if build_talent_index:
                     res = build_talent_index()
-                    st.success(f"Indexed {res.get('total_records', 0)} candidates successfully!")
+                    st.success(f"อัปเดตดรรชนีผู้สมัครสำเร็จแล้ว {res.get('total_records', 0)} รายการ!")
                 else:
-                    st.error("Talent Memory Engine missing.")
+                    st.error("ไม่พบบอร์ดเครื่องมือ Talent Memory Engine")
                     
-        query = st.text_input("🔍 Enter search terms (e.g., 'Golf Coach', 'PGA Certified', 'Data Scientist'):", value="Golf Coach")
+        query = st.text_input("🔍 พิมพ์คำค้นหา (เช่น 'Golf Coach', 'PGA Certified', 'Data Scientist'):", value="Golf Coach")
         
         if query:
             if search_talent_pool:
                 results = search_talent_pool(query, top_k=5)
                 if not results:
-                    st.info("No matching candidates found in Central Talent Store.")
+                    st.info("ไม่พบประวัติผู้สมัครที่ตรงกับคำค้นหาใน Central Talent Store")
                 else:
-                    st.markdown(f"### Found {len(results)} Matching Candidate Records:")
+                    st.markdown(f"### พบประวัติผู้สมัครที่ตรงกับคำค้นหา {len(results)} รายการ:")
                     for idx, item in enumerate(results, start=1):
                         rec = item["record"]
                         score = item["match_score"]
@@ -523,42 +522,42 @@ def main():
                                     #{idx} {rec.get('employee_name')} ({rec.get('employee_id')})
                                 </span>
                                 <span style="background:#1d4ed8; color:#ffffff; padding:2px 10px; border-radius:12px; font-weight:700;">
-                                    Match: {score}%
+                                    คะแนนความตรงกัน: {score}%
                                 </span>
                             </div>
                             <div style="margin-top:6px; color:#e2e8f0; font-size:0.9rem;">
-                                💼 <b>Role:</b> {rec.get('job_title')} | 🏢 <b>Dept:</b> {rec.get('department')} | 📍 <b>Workspace:</b> {rec.get('job_id')}
+                                💼 <b>ตำแหน่ง:</b> {rec.get('job_title')} | 🏢 <b>แผนก:</b> {rec.get('department')} | 📍 <b>โฟลเดอร์งาน:</b> {rec.get('job_id')}
                             </div>
                             <div style="margin-top:6px; color:#94a3b8; font-size:0.85rem;">
-                                🛠️ <b>Skills:</b> {', '.join(rec.get('skills', []))}
+                                🛠️ <b>ทักษะสำคัญ:</b> {', '.join(rec.get('skills', []))}
                             </div>
                             <div style="margin-top:8px; font-size:0.85rem; color:#cbd5e1; background:#0f172a; padding:10px; border-radius:6px;">
-                                📝 {rec.get('executive_summary')}
+                                📝 <b>บทสรุปผู้บริหาร:</b> {rec.get('executive_summary')}
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
             else:
-                st.error("Talent memory search function unavailable.")
+                st.error("ระบบค้นหาประวัติผู้สมัครขัดข้อง")
 
     # --- SECTION 4: Engine Status ---
-    elif menu == "⚙️ Engine Status":
-        st.subheader("⚙️ System Architecture & 12-Agent Status")
-        st.markdown("Overview of the 5 Recruitment Lifecycles and Agent operational readiness.")
+    elif menu == "⚙️ สถานะการทำงานของเอเจนต์ (Engine Status)":
+        st.subheader("⚙️ สถานะการทำงานของเอเจนต์ (Engine Status)")
+        st.markdown("ภาพรวมสถาปัตยกรรม 5 Recruitment Lifecycles และความพร้อมในการทำงานของเอเจนต์ทั้ง 12 สคริปต์")
         
         agents_data = [
-            {"ID": "Agent 0", "Name": "Telegram Gatekeeper", "Lifecycle": "L1: Job Spec & Sourcing", "Status": "Active ✅"},
-            {"ID": "Agent 1", "Name": "Job Description Synthesizer", "Lifecycle": "L1: Job Spec & Sourcing", "Status": "Active ✅"},
-            {"ID": "Agent 2", "Name": "Sourcing Strategist", "Lifecycle": "L1: Job Spec & Sourcing", "Status": "Active ✅"},
-            {"ID": "Agent 3", "Name": "Content Broadcaster", "Lifecycle": "L1: Job Spec & Sourcing", "Status": "Active ✅"},
-            {"ID": "Agent 4", "Name": "Resume Screener", "Lifecycle": "L2: Screening", "Status": "Active ✅"},
-            {"ID": "Agent 5", "Name": "Interview Scheduler", "Lifecycle": "L3: Evaluation", "Status": "Active ✅"},
-            {"ID": "Agent 6", "Name": "Interview Evaluator", "Lifecycle": "L3: Evaluation", "Status": "Active ✅"},
-            {"ID": "Agent 7", "Name": "Compliance Checker", "Lifecycle": "L4: Compliance & Offer", "Status": "Active ✅"},
-            {"ID": "Agent 8", "Name": "Offer Negotiator", "Lifecycle": "L4: Compliance & Offer", "Status": "Active ✅"},
-            {"ID": "Agent 9", "Name": "Onboarding Planner", "Lifecycle": "L5: Onboarding & Notify", "Status": "Active ✅"},
-            {"ID": "Agent 10", "Name": "Talent Profiler", "Lifecycle": "L5: Onboarding & Notify", "Status": "Active ✅"},
-            {"ID": "Agent 11", "Name": "Database Sync", "Lifecycle": "L5: Onboarding & Notify", "Status": "Active ✅"},
-            {"ID": "Agent 12", "Name": "Telegram Notify", "Lifecycle": "L5: Onboarding & Notify", "Status": "Active ✅"},
+            {"รหัสเอเจนต์": "Agent 0", "ชื่อเอเจนต์": "Telegram Gatekeeper", "วงจรการทำงาน (Lifecycle)": "L1: รับงานและกำหนดสเปก", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 1", "Name": "Job Description Synthesizer", "วงจรการทำงาน (Lifecycle)": "L1: รับงานและกำหนดสเปก", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 2", "Name": "Sourcing Strategist", "วงจรการทำงาน (Lifecycle)": "L1: รับงานและกำหนดสเปก", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 3", "Name": "Content Broadcaster", "วงจรการทำงาน (Lifecycle)": "L1: รับงานและกำหนดสเปก", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 4", "Name": "Resume Screener", "วงจรการทำงาน (Lifecycle)": "L2: คัดกรองผู้สมัคร", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 5", "Name": "Interview Scheduler", "วงจรการทำงาน (Lifecycle)": "L3: นัดหมายและประเมิน", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 6", "Name": "Interview Evaluator", "วงจรการทำงาน (Lifecycle)": "L3: นัดหมายและประเมิน", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 7", "Name": "Compliance Checker", "วงจรการทำงาน (Lifecycle)": "L4: ตรวจสอบความเสี่ยงและเสนอจ้าง", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 8", "Name": "Offer Negotiator", "วงจรการทำงาน (Lifecycle)": "L4: ตรวจสอบความเสี่ยงและเสนอจ้าง", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 9", "Name": "Onboarding Planner", "วงจรการทำงาน (Lifecycle)": "L5: เริ่มงานและบันทึกข้อมูล", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 10", "Name": "Talent Profiler", "วงจรการทำงาน (Lifecycle)": "L5: เริ่มงานและบันทึกข้อมูล", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 11", "Name": "Database Sync", "วงจรการทำงาน (Lifecycle)": "L5: เริ่มงานและบันทึกข้อมูล", "สถานะ": "เปิดใช้งานแล้ว ✅"},
+            {"รหัสเอเจนต์": "Agent 12", "Name": "Telegram Notify", "วงจรการทำงาน (Lifecycle)": "L5: เริ่มงานและบันทึกข้อมูล", "สถานะ": "เปิดใช้งานแล้ว ✅"},
         ]
         
         st.table(agents_data)
